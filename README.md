@@ -29,3 +29,11 @@ await db.insert(milestones).values({
 
 const allMilestones = await db.select().from(milestones);
 ```
+
+## Creating milestones
+
+Run `npm run dev` and open the home page. Enter a title and description, then
+select **Save milestone**. Both fields are required and validated on the server
+before insertion. The form displays a saving state and a success or error message.
+
+UI components live in `components/`, and server actions live in `actions/`.
