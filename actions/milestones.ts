@@ -1,46 +1,68 @@
 "use server";
 
-import { insertMilestone } from "@/server/repos/milestones";
+import { insertMilestones } from "@/server/repos/milestones";
+import { generateMilestones } from "@/server/services/milestone-generation";
+import {
+  milestoneDraftSchema,
+  milestoneSchema,
+  type MilestoneDraft,
+} from "@/server/shared/milestones";
 
-export type MilestoneFormState = {
-  status: "idle" | "error" | "success";
-  message: string;
-  values: { title: string; description: string };
-};
+type ActionResult =
+  | { success: true; draft: MilestoneDraft }
+  | { success: false; message: string };
 
-export async function createMilestone(
-  _previousState: MilestoneFormState,
+export async function generateMilestoneDraft(
   formData: FormData,
-): Promise<MilestoneFormState> {
-  const title = formData.get("title");
-  const description = formData.get("description");
-  const values = {
-    title: typeof title === "string" ? title.trim() : "",
-    description: typeof description === "string" ? description.trim() : "",
-  };
+): Promise<ActionResult> {
+  const topic = milestoneSchema.safeParse({
+    title: formData.get("title"),
+    description: formData.get("description"),
+  });
 
-  if (!values.title || !values.description) {
+  if (!topic.success) {
     return {
-      status: "error",
-      message: "Please enter both a title and a description.",
-      values,
+      success: false,
+      message:
+        "Enter a topic title (1-200 characters) and description (1-5000 characters).",
     };
   }
 
   try {
-    await insertMilestone(values);
+    const draft = await generateMilestones(topic.data);
+    return { success: true, draft };
   } catch (error) {
-    console.error("Failed to create milestone:", error);
+    console.error("Failed to generate milestone draft:", error);
     return {
-      status: "error",
-      message: "Could not save the milestone. Please try again.",
-      values,
+      success: false,
+      message:
+        "Could not generate three milestones. Check the server's Gemini configuration and try again. Nothing was saved.",
+    };
+  }
+}
+
+export async function saveMilestoneDraft(
+  input: unknown,
+): Promise<ActionResult> {
+  const draft = milestoneDraftSchema.safeParse(input);
+
+  if (!draft.success) {
+    return {
+      success: false,
+      message:
+        "Provide exactly three milestones, each with a title (1-200 characters) and description (1-5000 characters).",
     };
   }
 
-  return {
-    status: "success",
-    message: "Milestone saved.",
-    values: { title: "", description: "" },
-  };
+  try {
+    await insertMilestones(draft.data.milestones);
+    return { success: true, draft: draft.data };
+  } catch (error) {
+    console.error("Failed to save approved milestones:", error);
+    return {
+      success: false,
+      message:
+        "Could not save the milestones. Your draft is still available. Please try again.",
+    };
+  }
 }
