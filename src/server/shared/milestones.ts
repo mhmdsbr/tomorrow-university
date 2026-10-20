@@ -9,4 +9,8 @@ export const milestoneDraftSchema = z.object({
   milestones: z.array(milestoneSchema).length(3),
 });
 
+export const milestoneSelectionSchema = z.object({
+  milestones: z.array(milestoneSchema).min(1).max(3),
+});
+
 export type MilestoneDraft = z.infer<typeof milestoneDraftSchema>;

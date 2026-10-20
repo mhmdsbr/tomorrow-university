@@ -3,7 +3,7 @@
 import { insertMilestones } from "@/server/repos/milestones";
 import { generateMilestones } from "@/server/services/milestone-generation";
 import {
-  milestoneDraftSchema,
+  milestoneSelectionSchema,
   milestoneSchema,
   type MilestoneDraft,
 } from "@/server/shared/milestones";
@@ -44,13 +44,13 @@ export async function generateMilestoneDraft(
 export async function saveMilestoneDraft(
   input: unknown,
 ): Promise<ActionResult> {
-  const draft = milestoneDraftSchema.safeParse(input);
+  const draft = milestoneSelectionSchema.safeParse(input);
 
   if (!draft.success) {
     return {
       success: false,
       message:
-        "Provide exactly three milestones, each with a title (1-200 characters) and description (1-5000 characters).",
+        "Select one to three milestones, each with a title (1-200 characters) and description (1-5000 characters).",
     };
   }
 

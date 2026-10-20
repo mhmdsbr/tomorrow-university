@@ -6,7 +6,8 @@ type FormFieldProps = { label: string; id: string } & (
 );
 
 export default function FormField({ label, id, ...props }: FormFieldProps) {
-  const className = "rounded-md border border-zinc-400 p-3";
+  const className =
+    "w-full min-w-0 rounded-xl border border-stone-200 bg-white/80 px-4 py-3 text-sm leading-relaxed text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 disabled:opacity-60 dark:border-stone-700 dark:bg-stone-950/50 dark:text-stone-100";
   let control;
 
   if (props.multiline) {
@@ -21,7 +22,7 @@ export default function FormField({ label, id, ...props }: FormFieldProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="font-medium">
+      <label htmlFor={id} className="text-sm font-medium">
         {label}
       </label>
       {control}

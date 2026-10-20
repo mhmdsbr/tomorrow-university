@@ -33,7 +33,7 @@ type ButtonProps = ButtonBaseProps &
 
 const variantClasses: Record<ButtonVariant, string> = {
   solid:
-    "cursor-pointer rounded-md bg-zinc-900 px-4 py-3 text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900",
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-45",
   primary:
     "w-5/12 cursor-pointer border rounded-md bg-primary px-4 py-2 text-left text-white transition hover:bg-primary-dark",
   subtle: "cursor-pointer text-sm hover:underline",

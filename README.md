@@ -42,16 +42,25 @@ Run `npm run dev` and open the home page:
 1. Enter a topic title and description. There is no predefined topic list.
 2. Select **Generate three milestones**. The topic is sent to Google Gemini
    using the teaching prompt in `src/server/services/milestone-generation.ts`.
-3. Review and edit the three milestone titles and descriptions. You can
-   discard the draft or generate a replacement.
-4. Select **Approve and save all three** to record the reviewed milestones.
+3. Read the three milestone cards. They are read-only until you select
+   **Edit milestone**; **Done editing** returns a card to reading mode.
+4. Select the checkboxes for the milestones you want to keep, then select
+   **Save selected**. Only selected milestones are recorded. Nothing is selected
+   by default, and saving is disabled until at least one card is selected.
+5. Saved cards are locked against editing and resubmission in the current page.
+   You can still edit and save the remaining drafts, discard them, or generate
+   a replacement.
 
 Generating, editing, regenerating, and discarding do not write to the database.
 Drafts exist only in browser memory and are lost on reload or navigation.
-The server validates exactly three milestones before saving them in a single
+Generation still validates exactly three milestones. Saving independently
+validates one to three selected milestones and writes only those in a single
 atomic insert. The topic itself is not stored; the existing two-column
 milestones table remains unchanged. Saved milestones remain visible in the
 current page but are not loaded again after a reload.
+
+GSAP provides scoped entrance, staggered card, and selection transitions.
+Animations clean up on unmount and respect `prefers-reduced-motion`.
 
 Input titles are limited to 200 characters and descriptions to 5000 characters.
 Generation has a 60-second timeout; configure your hosting request timeout
