@@ -1,4 +1,5 @@
 # tomorrow-university
+
 Small app to showcase learning products to user to be reviewed
 
 ## Database
@@ -47,7 +48,8 @@ await db.insert(milestones).values({
   pathwayOptionId: 1,
   pathwayTitle: "Campus systems analysis",
   pathwayFocus: "Systems mapping and evidence",
-  pathwayDescription: "You investigate campus food flows and justify an improvement.",
+  pathwayDescription:
+    "You investigate campus food flows and justify an improvement.",
   learningOutcomes: [
     "You can explain the main campus food flows.",
     "You can map the impacts of a food system.",
@@ -59,9 +61,21 @@ await db.insert(milestones).values({
     student_output: "An annotated systems map and evidence checklist.",
   },
   steps: [
-    { order: 1, title: "Explore", description: "Identify campus food sources." },
-    { order: 2, title: "Investigate", description: "Map resource flows and waste." },
-    { order: 3, title: "Reflect", description: "Explain the key sustainability impacts." },
+    {
+      order: 1,
+      title: "Explore",
+      description: "Identify campus food sources.",
+    },
+    {
+      order: 2,
+      title: "Investigate",
+      description: "Map resource flows and waste.",
+    },
+    {
+      order: 3,
+      title: "Reflect",
+      description: "Explain the key sustainability impacts.",
+    },
   ],
 });
 
@@ -142,8 +156,12 @@ UI components live in `src/components/`, organized by atomic design:
 
 - `atoms/`: shared buttons, headings, and typography.
 - `molecules/`: labeled form fields, topic form, milestone cards, and draft review.
-- `organisms/MilestoneForm.tsx`: client-side generation, editing, approval, and
-  feedback state, composed from the molecules.
+- `organisms/MilestoneForm.tsx`: UI composition and scoped GSAP animations.
+- `src/hooks/useMilestoneForm.ts`: generation, editing, pathway selection,
+  approval, and feedback workflow.
+- `src/hooks/useMilestoneSession.ts`: browser session restoration and persistence.
+- `src/utils/milestone-session.ts`: client-side session validation and migration
+  helpers used by the session hook and its tests.
 
 Server actions live in `actions/`. The page remains a Server Component; only
 the form organism and its dependencies are included in the interactive client UI.

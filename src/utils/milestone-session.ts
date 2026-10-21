@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { topicSchema } from "../../server/shared/milestones";
+import { topicSchema } from "../server/shared/milestones";
 
 export const MILESTONE_SESSION_KEY = "learning-studio:milestone-session:v1";
 
@@ -214,3 +214,5 @@ export function restoreMilestoneSession(input: unknown) {
   });
   return { state, migrated: true };
 }
+
+export type MilestoneSession = z.infer<typeof milestoneSessionSchema>;

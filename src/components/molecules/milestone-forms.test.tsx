@@ -5,7 +5,7 @@ import { createPathwayFixture } from "../../server/shared/pathway-fixtures";
 import {
   milestoneSessionSchema,
   restoreMilestoneSession,
-} from "../organisms/milestone-session";
+} from "../../utils/milestone-session";
 import DraftReview from "./DraftReview";
 import PathwayOptions from "./PathwayOptions";
 import TopicForm from "./TopicForm";
