@@ -6,12 +6,16 @@ interface TopicFormProps {
   pending: boolean;
   hasDraft: boolean;
   onSubmit: FormEventHandler<HTMLFormElement>;
+  topic?: { title: string; description: string };
+  onTopicChange?: (field: "title" | "description", value: string) => void;
 }
 
 export default function TopicForm({
   pending,
   hasDraft,
   onSubmit,
+  topic,
+  onTopicChange,
 }: TopicFormProps) {
   return (
     <form
@@ -26,7 +30,9 @@ export default function TopicForm({
         </legend>
         <Typography size="sm" color="inherit" leading="relaxed">
           Describe what your students should explore. We will turn your idea
-          into three thoughtful steps for learning.
+          into three alternative three-month pathways. Choose one, with 3-5
+          sequential milestones, learning outcomes, steps, and scenario
+          assignments.
         </Typography>
         <FormField
           label="Topic title"
@@ -35,6 +41,12 @@ export default function TopicForm({
           type="text"
           required
           maxLength={200}
+          value={topic?.title}
+          onChange={
+            onTopicChange
+              ? (event) => onTopicChange("title", event.target.value)
+              : undefined
+          }
           placeholder="e.g. Sustainable food systems"
         />
         <FormField
@@ -44,6 +56,12 @@ export default function TopicForm({
           name="description"
           required
           maxLength={5000}
+          value={topic?.description}
+          onChange={
+            onTopicChange
+              ? (event) => onTopicChange("description", event.target.value)
+              : undefined
+          }
           rows={4}
           placeholder="Who is learning, what should they discover, and why does it matter?"
         />
@@ -51,13 +69,13 @@ export default function TopicForm({
           {pending
             ? "Working..."
             : hasDraft
-              ? "Generate a new draft"
-              : "Generate three milestones"}
+              ? "Generate new pathway options"
+              : "Generate three pathway options"}
         </Button>
         <Typography size="xs" color="inherit" leading="relaxed">
           Generation sends your topic to Google Gemini. Nothing is saved until
-          you select and save. Unsaved drafts are lost when you leave or reload
-          this page.
+          you select and save to the database. Your work is kept in this browser
+          tab&apos;s session across reloads, until the tab is closed.
         </Typography>
       </fieldset>
     </form>

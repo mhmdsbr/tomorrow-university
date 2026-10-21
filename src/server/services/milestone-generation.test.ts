@@ -1,22 +1,15 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
-import { milestoneDraftSchema, milestoneSchema } from "../shared/milestones";
+import {
+  pathwaySuggestionsSchema,
+  pathwaySaveSchema,
+  topicSchema,
+} from "../shared/milestones";
+import { createPathwayFixture } from "../shared/pathway-fixtures";
 import { generateMilestones, MILESTONE_PROMPT } from "./milestone-generation";
 
-const topic = {
-  title: "Sustainable food systems",
-  description: "Explore the impacts of campus food systems.",
-};
-const draft = {
-  milestones: [
-    { title: "Understand", description: "Map key impacts." },
-    { title: "Apply", description: "Analyze a campus food system." },
-    { title: "Evaluate", description: "Design and justify improvements." },
-  ],
-};
 const originalKey = process.env.GEMINI_API_KEY;
 const originalModel = process.env.GEMINI_MODEL;
-
 afterEach(() => {
   mock.restoreAll();
   if (originalKey === undefined) delete process.env.GEMINI_API_KEY;
@@ -40,94 +33,198 @@ function mockResponse(output: unknown, finishReason = "STOP") {
   return mock.method(globalThis, "fetch", response);
 }
 
-test("validates exactly three non-empty milestones and trims approved text", () => {
-  assert.equal(milestoneDraftSchema.safeParse(draft).success, true);
-  for (const count of [0, 1, 2, 4]) {
-    const milestones = Array.from({ length: count }, () => draft.milestones[0]);
-    assert.equal(milestoneDraftSchema.safeParse({ milestones }).success, false);
-  }
-  assert.equal(
-    milestoneSchema.safeParse({ ...topic, title: "  " }).success,
-    false,
-  );
-  assert.equal(
-    milestoneSchema.safeParse({ ...topic, description: "  " }).success,
-    false,
-  );
-  assert.equal(
-    milestoneSchema.safeParse({ ...topic, title: "a".repeat(201) }).success,
-    false,
-  );
-  assert.equal(
-    milestoneSchema.safeParse({ ...topic, description: "a".repeat(5001) })
-      .success,
-    false,
-  );
-  assert.deepEqual(
-    milestoneSchema.parse({ title: " Title ", description: " Description " }),
-    { title: "Title", description: "Description" },
-  );
-});
-
-test("requests structured Gemini output with a server-side prompt", async () => {
+test("SDK requests the exact prompt and structured three-option schema", async () => {
+  const draft = createPathwayFixture();
   const fetchMock = mockResponse(draft);
-  assert.deepEqual(await generateMilestones(topic), draft);
+  assert.deepEqual(await generateMilestones(draft.topic), draft);
   const [url, options] = fetchMock.mock.calls[0].arguments;
   assert.ok(options);
   assert.match(String(url), /models\/test-model:generateContent$/);
   assert.equal(new Headers(options.headers).get("x-goog-api-key"), "test-key");
   const request = JSON.parse(String(options.body));
   assert.equal(request.systemInstruction.parts[0].text, MILESTONE_PROMPT);
-  assert.deepEqual(JSON.parse(request.contents[0].parts[0].text), topic);
+  assert.match(
+    MILESTONE_PROMPT,
+    /three distinct alternative learning pathway suggestions/,
+  );
+  assert.deepEqual(request.contents, [
+    { role: "user", parts: [{ text: JSON.stringify(draft.topic) }] },
+  ]);
+  assert.deepEqual(
+    request.generationConfig.responseJsonSchema,
+    pathwaySuggestionsSchema.toJSONSchema(),
+  );
   assert.equal(request.generationConfig.responseMimeType, "application/json");
-  const schema =
-    request.generationConfig.responseJsonSchema.properties.milestones;
-  assert.equal(schema.minItems, 3);
-  assert.equal(schema.maxItems, 3);
-  assert.equal(options.cache, "no-store");
+  assert.equal(request.generationConfig.maxOutputTokens, 32768);
+  assert.ok(options.signal instanceof AbortSignal);
 });
 
-test("rejects invalid generated counts and incomplete responses", async () => {
-  mockResponse({ milestones: draft.milestones.slice(0, 2) });
-  await assert.rejects(generateMilestones(topic));
-  mock.restoreAll();
+test("requires exactly three options, each with 3-5 sequential milestones", async () => {
+  for (const count of [0, 1, 2, 3, 4]) {
+    const draft = createPathwayFixture();
+    draft.pathway_options = Array.from({ length: count }, (_, index) => ({
+      ...draft.pathway_options[0],
+      id: index + 1,
+    }));
+    assert.equal(
+      pathwaySuggestionsSchema.safeParse(draft).success,
+      count === 3,
+    );
+  }
+  for (const count of [0, 1, 2, 3, 4, 5, 6]) {
+    const draft = createPathwayFixture(count);
+    mockResponse(draft);
+    if (count >= 3 && count <= 5)
+      assert.deepEqual(await generateMilestones(draft.topic), draft);
+    else await assert.rejects(generateMilestones(draft.topic));
+    mock.restoreAll();
+  }
+  const draft = createPathwayFixture();
+  draft.pathway_options[1].id = 1;
+  assert.equal(pathwaySuggestionsSchema.safeParse(draft).success, false);
+  const unordered = createPathwayFixture();
+  unordered.pathway_options[2].milestones.reverse();
+  assert.equal(pathwaySuggestionsSchema.safeParse(unordered).success, false);
+});
+
+test("validates outcomes, ordered steps, single scenario and duration in every option", () => {
+  for (const count of [0, 1, 2, 3, 4]) {
+    const draft = createPathwayFixture();
+    draft.pathway_options[2].milestones[1].learning_outcomes = Array.from(
+      { length: count },
+      () => "You explain concepts.",
+    );
+    assert.equal(
+      pathwaySuggestionsSchema.safeParse(draft).success,
+      count >= 2 && count <= 3,
+    );
+  }
+  for (const count of [0, 1, 2, 3, 4, 5, 6]) {
+    const draft = createPathwayFixture();
+    draft.pathway_options[1].milestones[2].steps = Array.from(
+      { length: count },
+      (_, index) => ({
+        order: index + 1,
+        title: "Activity",
+        description: "You map evidence.",
+      }),
+    );
+    assert.equal(
+      pathwaySuggestionsSchema.safeParse(draft).success,
+      count >= 3 && count <= 5,
+    );
+  }
+  for (const scenario_assignment of [
+    undefined,
+    {},
+    [],
+    [{ title: "Not an object" }],
+  ]) {
+    const draft = createPathwayFixture();
+    const milestone = draft.pathway_options[0].milestones[0];
+    assert.equal(
+      pathwaySuggestionsSchema.safeParse({
+        ...draft,
+        pathway_options: [
+          {
+            ...draft.pathway_options[0],
+            milestones: [
+              { ...milestone, scenario_assignment },
+              ...draft.pathway_options[0].milestones.slice(1),
+            ],
+          },
+          ...draft.pathway_options.slice(1),
+        ],
+      }).success,
+      false,
+    );
+  }
+  const draft = createPathwayFixture();
+  draft.pathway_options[0].milestones[0].steps.reverse();
+  assert.equal(pathwaySuggestionsSchema.safeParse(draft).success, false);
+  assert.equal(
+    pathwaySuggestionsSchema.safeParse({
+      ...createPathwayFixture(),
+      duration: "6 months",
+    }).success,
+    false,
+  );
+});
+
+test("save requires one complete pathway, not multiple options or too few milestones", () => {
+  const draft = createPathwayFixture(5);
+  for (const pathway of draft.pathway_options) {
+    assert.equal(
+      pathwaySaveSchema.safeParse({
+        topic: draft.topic,
+        duration: draft.duration,
+        pathway,
+      }).success,
+      true,
+    );
+  }
+  assert.equal(pathwaySaveSchema.safeParse(draft).success, false);
+  assert.equal(
+    pathwaySaveSchema.safeParse({
+      topic: draft.topic,
+      duration: draft.duration,
+      pathway: {
+        ...draft.pathway_options[0],
+        milestones: draft.pathway_options[0].milestones.slice(0, 2),
+      },
+    }).success,
+    false,
+  );
+  assert.equal(
+    pathwaySaveSchema.safeParse({
+      duration: draft.duration,
+      pathway: draft.pathway_options[0],
+    }).success,
+    false,
+  );
+  assert.equal(
+    topicSchema.safeParse({ title: " ", description: "Description" }).success,
+    false,
+  );
+});
+
+test("rejects incomplete, blocked and malformed SDK output", async () => {
+  const draft = createPathwayFixture();
   mockResponse(draft, "MAX_TOKENS");
-  await assert.rejects(generateMilestones(topic));
-});
-
-test("rejects malformed JSON, blocked output and HTTP failures", async () => {
+  await assert.rejects(generateMilestones(draft.topic));
+  mock.restoreAll();
+  mockResponse(draft);
+  mock.method(globalThis, "fetch", async () =>
+    Response.json({ candidates: [] }),
+  );
+  await assert.rejects(generateMilestones(draft.topic));
+  mock.restoreAll();
   mockResponse(draft);
   mock.method(globalThis, "fetch", async () =>
     Response.json({
       candidates: [
-        {
-          finishReason: "STOP",
-          content: { parts: [{ text: "not JSON" }] },
-        },
+        { finishReason: "STOP", content: { parts: [{ text: "not JSON" }] } },
       ],
     }),
   );
-  await assert.rejects(generateMilestones(topic), SyntaxError);
-  mock.restoreAll();
-  mock.method(globalThis, "fetch", async () =>
-    Response.json({ candidates: [] }),
-  );
-  await assert.rejects(generateMilestones(topic));
-  mock.restoreAll();
-  mock.method(
-    globalThis,
-    "fetch",
-    async () => new Response(null, { status: 429 }),
-  );
-  await assert.rejects(generateMilestones(topic), /HTTP 429/);
+  await assert.rejects(generateMilestones(draft.topic), SyntaxError);
 });
 
-test("propagates network failures and rejects missing server configuration", async () => {
+test("propagates API and timeout errors and requires server configuration", async () => {
+  const draft = createPathwayFixture();
   mockResponse(draft);
+  mock.method(globalThis, "fetch", async () => {
+    throw new Error("HTTP 429");
+  });
+  await assert.rejects(generateMilestones(draft.topic), /429/);
+  mock.restoreAll();
   mock.method(globalThis, "fetch", async () => {
     throw new DOMException("Request timed out", "TimeoutError");
   });
-  await assert.rejects(generateMilestones(topic), /timed out/);
+  await assert.rejects(generateMilestones(draft.topic), /timed out/);
   delete process.env.GEMINI_API_KEY;
-  await assert.rejects(generateMilestones(topic), /GEMINI_API_KEY/);
+  await assert.rejects(generateMilestones(draft.topic), /GEMINI_API_KEY/);
+  process.env.GEMINI_API_KEY = "test-key";
+  delete process.env.GEMINI_MODEL;
+  await assert.rejects(generateMilestones(draft.topic), /GEMINI_MODEL/);
 });

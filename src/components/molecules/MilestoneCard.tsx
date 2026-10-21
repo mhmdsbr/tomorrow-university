@@ -1,34 +1,30 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import type { MilestoneDraft } from "../../server/shared/milestones";
+import type { LearningMilestone } from "../../server/shared/milestones";
 import { Button, Heading, Typography } from "../atoms";
 import FormField from "./FormField";
 
 gsap.registerPlugin(useGSAP);
 
-export type MilestoneField = "title" | "description";
-
 interface MilestoneCardProps {
-  milestone: MilestoneDraft["milestones"][number];
+  milestone: LearningMilestone;
   index: number;
-  selected: boolean;
   editing: boolean;
   saved: boolean;
+  archived?: boolean;
   pending: boolean;
-  onSelect: (index: number) => void;
   onToggleEdit: (index: number) => void;
-  onEdit: (index: number, field: MilestoneField, value: string) => void;
+  onEdit: (index: number, milestone: LearningMilestone) => void;
 }
 
 export default function MilestoneCard({
   milestone,
   index,
-  selected,
   editing,
   saved,
+  archived = false,
   pending,
-  onSelect,
   onToggleEdit,
   onEdit,
 }: MilestoneCardProps) {
@@ -40,7 +36,7 @@ export default function MilestoneCard({
       media.add("(prefers-reduced-motion: no-preference)", () => {
         gsap.fromTo(
           card.current,
-          { scale: selected ? 0.985 : 1.01 },
+          { scale: 0.99 },
           {
             scale: 1,
             duration: 0.25,
@@ -50,34 +46,22 @@ export default function MilestoneCard({
       });
       return () => media.revert();
     },
-    { scope: card, dependencies: [selected], revertOnUpdate: true },
+    { scope: card },
   );
 
   return (
     <article
       ref={card}
       data-milestone-card
-      className={`min-w-0 rounded-2xl border p-5 transition-colors sm:p-6 ${
-        selected
-          ? "border-emerald-600 bg-emerald-50/70 shadow-sm dark:bg-emerald-950/40"
-          : "border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
-      }`}
+      className="min-w-0 rounded-2xl border border-stone-200 bg-white p-5 sm:p-6 dark:border-stone-700 dark:bg-stone-900"
     >
       <div className="mb-5 flex items-center justify-between gap-4">
         <span className="font-mono text-xs tracking-widest text-emerald-700 dark:text-emerald-400">
           MILESTONE 0{index + 1}
         </span>
-        <label className="flex cursor-pointer items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={selected}
-            disabled={pending || saved}
-            onChange={() => onSelect(index)}
-            aria-label={`Select milestone ${index + 1}`}
-            className="h-4 w-4 accent-emerald-700"
-          />
-          {saved ? "Saved" : "Select"}
-        </label>
+        <span className="text-xs text-stone-500">
+          {archived ? "Archived" : saved ? "Saved" : "Sequential milestone"}
+        </span>
       </div>
       {editing && !saved ? (
         <div className="flex flex-col gap-4">
@@ -85,8 +69,10 @@ export default function MilestoneCard({
             label="Title"
             id={`milestone-title-${index}`}
             value={milestone.title}
-            onChange={(event) => onEdit(index, "title", event.target.value)}
-            required={selected}
+            onChange={(event) =>
+              onEdit(index, { ...milestone, title: event.target.value })
+            }
+            required
             maxLength={200}
           />
           <FormField
@@ -95,9 +81,9 @@ export default function MilestoneCard({
             id={`milestone-description-${index}`}
             value={milestone.description}
             onChange={(event) =>
-              onEdit(index, "description", event.target.value)
+              onEdit(index, { ...milestone, description: event.target.value })
             }
-            required={selected}
+            required
             maxLength={5000}
             rows={5}
           />
@@ -112,6 +98,157 @@ export default function MilestoneCard({
           </Typography>
         </div>
       )}
+      <section
+        aria-label={`Milestone ${index + 1} learning outcomes`}
+        className="mt-6 space-y-3"
+      >
+        <h3 className="text-sm font-semibold">What you will be able to do</h3>
+        <ul className="space-y-3">
+          {milestone.learning_outcomes.map((outcome, outcomeIndex) => (
+            <li key={outcomeIndex} className="text-sm leading-relaxed">
+              {editing && !saved ? (
+                <FormField
+                  multiline
+                  label={`Learning outcome ${outcomeIndex + 1}`}
+                  id={`milestone-${index}-outcome-${outcomeIndex}`}
+                  value={outcome}
+                  required
+                  maxLength={5000}
+                  rows={2}
+                  onChange={(event) =>
+                    onEdit(index, {
+                      ...milestone,
+                      learning_outcomes: milestone.learning_outcomes.map(
+                        (value, position) =>
+                          position === outcomeIndex
+                            ? event.target.value
+                            : value,
+                      ),
+                    })
+                  }
+                />
+              ) : (
+                outcome
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section
+        aria-label={`Milestone ${index + 1} steps`}
+        className="mt-6 border-t border-stone-200/70 pt-4 dark:border-stone-700"
+      >
+        <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+          {milestone.steps.length} learning steps
+        </p>
+        <ol className="space-y-5">
+          {milestone.steps.map((step, stepIndex) => (
+            <li key={stepIndex} className="min-w-0 break-words">
+              <p className="mb-2 text-xs font-medium text-stone-500 dark:text-stone-400">
+                Step {step.order}
+              </p>
+              {editing && !saved ? (
+                <div className="flex flex-col gap-3">
+                  <FormField
+                    label={`Step ${stepIndex + 1} title`}
+                    id={`milestone-${index}-step-${stepIndex}-title`}
+                    value={step.title}
+                    onChange={(event) =>
+                      onEdit(index, {
+                        ...milestone,
+                        steps: milestone.steps.map((value, position) =>
+                          position === stepIndex
+                            ? { ...value, title: event.target.value }
+                            : value,
+                        ),
+                      })
+                    }
+                    required
+                    maxLength={200}
+                  />
+                  <FormField
+                    multiline
+                    label={`Step ${stepIndex + 1} description`}
+                    id={`milestone-${index}-step-${stepIndex}-description`}
+                    value={step.description}
+                    onChange={(event) =>
+                      onEdit(index, {
+                        ...milestone,
+                        steps: milestone.steps.map((value, position) =>
+                          position === stepIndex
+                            ? { ...value, description: event.target.value }
+                            : value,
+                        ),
+                      })
+                    }
+                    required
+                    maxLength={5000}
+                    rows={3}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Heading
+                    as="h3"
+                    size="inherit"
+                    color="inherit"
+                    weight="semibold"
+                  >
+                    {step.title}
+                  </Heading>
+                  <Typography size="sm" color="inherit" leading="relaxed">
+                    {step.description}
+                  </Typography>
+                </div>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
+      <section
+        aria-label={`Milestone ${index + 1} scenario assignment`}
+        className="mt-6 space-y-4 rounded-xl bg-stone-100/70 p-4 dark:bg-stone-800/60"
+      >
+        <h3 className="text-sm font-semibold">Scenario assignment</h3>
+        {(
+          [
+            ["title", "Assignment title"],
+            ["scenario", "Scenario"],
+            ["task", "Your task"],
+            ["student_output", "Your output"],
+          ] as const
+        ).map(([field, label]) => (
+          <div key={field} className="break-words">
+            {editing && !saved ? (
+              <FormField
+                multiline
+                label={label}
+                id={`milestone-${index}-assignment-${field}`}
+                value={milestone.scenario_assignment[field]}
+                required
+                maxLength={field === "title" ? 200 : 5000}
+                rows={field === "title" ? 2 : 3}
+                onChange={(event) =>
+                  onEdit(index, {
+                    ...milestone,
+                    scenario_assignment: {
+                      ...milestone.scenario_assignment,
+                      [field]: event.target.value,
+                    },
+                  })
+                }
+              />
+            ) : (
+              <>
+                <p className="mb-1 text-xs font-semibold">{label}</p>
+                <Typography size="sm" color="inherit" leading="relaxed">
+                  {milestone.scenario_assignment[field]}
+                </Typography>
+              </>
+            )}
+          </div>
+        ))}
+      </section>
       {!saved && (
         <div className="mt-5 border-t border-stone-200/70 pt-4 dark:border-stone-700">
           <Button

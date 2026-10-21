@@ -18,7 +18,7 @@ export default function Home() {
           </Heading>
           <Typography size="lg" color="inherit" leading="relaxed">
             Shape a learning journey that matters. Start with a topic, refine
-            the possibilities, and keep the milestones that inspire you.
+            three alternatives, and choose the pathway that inspires you.
           </Typography>
           <ol
             aria-label="How it works"
@@ -26,7 +26,7 @@ export default function Home() {
           >
             <li>01 &nbsp; Describe</li>
             <li>02 &nbsp; Review &amp; refine</li>
-            <li>03 &nbsp; Select &amp; save</li>
+            <li>03 &nbsp; Choose a pathway &amp; save</li>
           </ol>
         </header>
         <div className="flex w-full flex-col gap-6">

@@ -8,6 +8,34 @@
       "when": 1792411710400,
       "tag": "0000_wandering_joshua_kane",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792489106828,
+      "tag": "0001_loose_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792514137396,
+      "tag": "0002_high_vapor",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792518537833,
+      "tag": "0003_opposite_unicorn",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792519900464,
+      "tag": "0004_shocking_sphinx",
+      "breakpoints": true
     }
   ]
 }
