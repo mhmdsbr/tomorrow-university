@@ -5,6 +5,11 @@ export function createPathwayFixture(count = 3) {
       description: "Explore sustainable campus decisions.",
     },
     duration: "3 months" as const,
+    domain_fit: {
+      matches: true,
+      suggested_domain: "Sustainability" as const,
+      reason: "The topic is about sustainable campus decisions.",
+    },
     pathway_options: [1, 2, 3].map((id) => ({
       id,
       title: `Pathway ${id}`,

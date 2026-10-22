@@ -14,6 +14,26 @@ export const LEARNING_DOMAINS = [
 
 export const learningDomainSchema = z.enum(LEARNING_DOMAINS);
 
+export const LEARNING_DOMAIN_HINTS: Record<
+  (typeof LEARNING_DOMAINS)[number],
+  string
+> = {
+  "Entrepreneurship & Innovation":
+    "Startups, opportunity discovery, customer validation, business models, innovation strategy.",
+  "Business & Leadership":
+    "Organizations, management, strategy, leadership, teams, change, and performance.",
+  "Technology & AI":
+    "Software, data, AI and digital systems: how they work, are designed, and are used responsibly.",
+  Sustainability:
+    "Climate, environment, resources, circular economy, social impact, and sustainable transitions.",
+};
+
+export const domainFitSchema = z.object({
+  matches: z.boolean(),
+  suggested_domain: learningDomainSchema,
+  reason: z.string().trim().min(1).max(500),
+});
+
 export const pathwayTopicSchema = topicSchema.extend({
   domain: learningDomainSchema,
 });
@@ -55,6 +75,7 @@ export const milestoneSchema = topicSchema
 export type MilestoneTopic = z.infer<typeof topicSchema>;
 export type LearningDomain = z.infer<typeof learningDomainSchema>;
 export type PathwayTopic = z.infer<typeof pathwayTopicSchema>;
+export type DomainFit = z.infer<typeof domainFitSchema>;
 export type MilestoneStep = z.infer<typeof milestoneStepSchema>;
 export type LearningMilestone = z.infer<typeof milestoneSchema>;
 export type ScenarioAssignment = z.infer<typeof scenarioAssignmentSchema>;
@@ -80,6 +101,7 @@ export const pathwaySuggestionsSchema = z
   .object({
     topic: topicSchema,
     duration: z.literal("3 months"),
+    domain_fit: domainFitSchema,
     pathway_options: z.array(learningPathwaySchema).length(3),
   })
   .refine(

@@ -9,6 +9,7 @@ import TopicForm from "../molecules/TopicForm";
 import DraftReview from "../molecules/DraftReview";
 import PathwayOptions from "../molecules/PathwayOptions";
 import TopicSummary from "../molecules/TopicSummary";
+import DomainFitNotice from "../molecules/DomainFitNotice";
 
 gsap.registerPlugin(useGSAP);
 
@@ -46,7 +47,18 @@ export default function MilestoneForm() {
     discard,
     expanded,
     topicOpen,
+    domainFitDismissed,
+    regenerateWithDomain,
+    keepDomain,
   } = useMilestoneForm();
+  const domainFit = draft?.domain_fit;
+  const showDomainFit =
+    !generating &&
+    !domainFitDismissed &&
+    draftTopic &&
+    domainFit &&
+    !domainFit.matches &&
+    domainFit.suggested_domain !== draftTopic.domain;
   const container = useRef<HTMLDivElement>(null);
   const workspace = useRef<HTMLDivElement>(null);
   const review = useRef<HTMLDivElement>(null);
@@ -127,6 +139,15 @@ export default function MilestoneForm() {
         </div>
       )}
       {!draft && feedbackBox}
+      {showDomainFit && (
+        <DomainFitNotice
+          fit={domainFit}
+          chosenDomain={draftTopic.domain}
+          pending={pending}
+          onRegenerate={regenerateWithDomain}
+          onKeep={keepDomain}
+        />
+      )}
       {draft && (
         <div
           ref={workspace}
