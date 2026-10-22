@@ -1,0 +1,1 @@
+ALTER TABLE "milestones" ADD COLUMN "topic_domain" text;

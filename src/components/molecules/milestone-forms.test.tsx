@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { LEARNING_DOMAINS } from "../../shared/milestones";
 import { createPathwayFixture } from "../../test/pathway-fixtures";
 import DraftReview from "./DraftReview";
 import PathwayOptions from "./PathwayOptions";
@@ -91,6 +92,17 @@ test("topic form retains native validation and displays new option generation ac
   assert.match(html, /maxLength="200"/);
   assert.match(html, /maxLength="5000"/);
   assert.match(html, /Generate three pathway options/);
+  assert.match(html, /<select id="domain" name="domain" required=""/);
+  assert.match(
+    html,
+    /<option value="" disabled="" selected="">Choose a domain/,
+  );
+  for (const domain of LEARNING_DOMAINS)
+    assert.match(
+      html,
+      new RegExp(`<option value="${domain.replace("&", "&amp;")}">`),
+    );
+  assert.equal((html.match(/<option /g) ?? []).length, 5);
   const pending = renderToStaticMarkup(
     <TopicForm pending hasDraft onSubmit={handlers.onSubmit} />,
   );

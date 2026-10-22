@@ -3,9 +3,14 @@ import { afterEach, beforeEach, mock, test } from "node:test";
 import {
   pathwaySuggestionsSchema,
   pathwaySaveSchema,
+  pathwayTopicSchema,
   topicSchema,
+  LEARNING_DOMAINS,
 } from "../../shared/milestones";
-import { createPathwayFixture } from "../../test/pathway-fixtures";
+import {
+  createPathwayFixture,
+  createTopicInput,
+} from "../../test/pathway-fixtures";
 import { MILESTONE_PROMPT } from "./constant";
 import { generateMilestones } from "./milestone-generation";
 
@@ -51,7 +56,7 @@ function mockResponse(output: unknown, finishReason = "STOP") {
 test("SDK requests the exact prompt and structured three-option schema", async () => {
   const draft = createPathwayFixture();
   const fetchMock = mockResponse(draft);
-  assert.deepEqual(await generateMilestones(draft.topic), draft);
+  assert.deepEqual(await generateMilestones(createTopicInput(draft)), draft);
   const [url, options] = fetchMock.mock.calls[0].arguments;
   assert.ok(options);
   assert.match(String(url), /models\/test-model:generateContent$/);
@@ -60,10 +65,17 @@ test("SDK requests the exact prompt and structured three-option schema", async (
   assert.equal(request.systemInstruction.parts[0].text, MILESTONE_PROMPT);
   assert.match(
     MILESTONE_PROMPT,
-    /three distinct alternative learning pathway suggestions/,
+    /three distinct alternative learning pathways/,
   );
+  for (const domain of LEARNING_DOMAINS)
+    assert.ok(MILESTONE_PROMPT.includes(domain), domain);
+  assert.match(MILESTONE_PROMPT, /"author_or_publisher": "\.\.\."\n\}/);
+  assert.doesNotMatch(MILESTONE_PROMPT, /"url"|"relevance"/);
   assert.deepEqual(request.contents, [
-    { role: "user", parts: [{ text: JSON.stringify(draft.topic) }] },
+    {
+      role: "user",
+      parts: [{ text: JSON.stringify(createTopicInput(draft)) }],
+    },
   ]);
   assert.deepEqual(
     request.generationConfig.responseJsonSchema,
@@ -92,7 +104,7 @@ function mockDeepSeekResponse(output: unknown, finishReason = "stop") {
 test("DeepSeek sends the same prompt with JSON output and thinking disabled", async () => {
   const draft = createPathwayFixture();
   const fetchMock = mockDeepSeekResponse(draft);
-  assert.deepEqual(await generateMilestones(draft.topic), draft);
+  assert.deepEqual(await generateMilestones(createTopicInput(draft)), draft);
   const [url, options] = fetchMock.mock.calls[0].arguments;
   assert.equal(url, "https://api.deepseek.com/chat/completions");
   assert.ok(options);
@@ -111,7 +123,7 @@ test("DeepSeek sends the same prompt with JSON output and thinking disabled", as
     model: "deepseek-flash",
     messages: [
       { role: "system", content: MILESTONE_PROMPT },
-      { role: "user", content: JSON.stringify(draft.topic) },
+      { role: "user", content: JSON.stringify(createTopicInput(draft)) },
     ],
     max_tokens: 32768,
     response_format: { type: "json_object" },
@@ -125,7 +137,7 @@ test("DeepSeek supports a configured model", async () => {
   const draft = createPathwayFixture();
   const fetchMock = mockDeepSeekResponse(draft);
   process.env.DEEPSEEK_MODEL = "deepseek-v4-pro";
-  await generateMilestones(draft.topic);
+  await generateMilestones(createTopicInput(draft));
   const [, options] = fetchMock.mock.calls[0].arguments;
   const request = JSON.parse(String(options?.body));
   assert.equal(request.model, "deepseek-v4-pro");
@@ -136,14 +148,14 @@ test("DeepSeek rejects truncated output, invalid pathway structures and malforme
   const draft = createPathwayFixture();
   for (const reason of ["length", "content_filter", "tool_calls", ""]) {
     mockDeepSeekResponse(draft, reason);
-    await assert.rejects(generateMilestones(draft.topic));
+    await assert.rejects(generateMilestones(createTopicInput(draft)));
     mock.restoreAll();
   }
   mockDeepSeekResponse({
     ...draft,
     pathway_options: draft.pathway_options.slice(0, 2),
   });
-  await assert.rejects(generateMilestones(draft.topic));
+  await assert.rejects(generateMilestones(createTopicInput(draft)));
   mock.restoreAll();
   process.env.LLM_PROVIDER = "deepseek";
   for (const response of [
@@ -157,7 +169,7 @@ test("DeepSeek rejects truncated output, invalid pathway structures and malforme
     },
   ]) {
     mock.method(globalThis, "fetch", async () => Response.json(response));
-    await assert.rejects(generateMilestones(draft.topic));
+    await assert.rejects(generateMilestones(createTopicInput(draft)));
     mock.restoreAll();
   }
 });
@@ -173,7 +185,7 @@ test("DeepSeek exposes HTTP and network errors without falling back to Gemini", 
       async () => new Response("Provider error", { status }),
     );
     await assert.rejects(
-      generateMilestones(draft.topic),
+      generateMilestones(createTopicInput(draft)),
       new RegExp(`HTTP ${status}`),
     );
     assert.equal(fetchMock.mock.calls.length, 1);
@@ -182,14 +194,17 @@ test("DeepSeek exposes HTTP and network errors without falling back to Gemini", 
   mock.method(globalThis, "fetch", async () => {
     throw new DOMException("Request timed out", "TimeoutError");
   });
-  await assert.rejects(generateMilestones(draft.topic), /timed out/);
+  await assert.rejects(
+    generateMilestones(createTopicInput(draft)),
+    /timed out/,
+  );
 });
 
 test("invalid provider configuration fails before making a network request", async () => {
   const fetchMock = mock.method(globalThis, "fetch", async () => {
     throw new Error("Unexpected network request");
   });
-  const topic = createPathwayFixture().topic;
+  const topic = createTopicInput();
   process.env.LLM_PROVIDER = "unknown";
   await assert.rejects(generateMilestones(topic), /LLM_PROVIDER/);
   process.env.LLM_PROVIDER = "nvidia";
@@ -222,8 +237,11 @@ test("requires exactly three options, each with 3-5 sequential milestones", asyn
     const draft = createPathwayFixture(count);
     mockResponse(draft);
     if (count >= 3 && count <= 5)
-      assert.deepEqual(await generateMilestones(draft.topic), draft);
-    else await assert.rejects(generateMilestones(draft.topic));
+      assert.deepEqual(
+        await generateMilestones(createTopicInput(draft)),
+        draft,
+      );
+    else await assert.rejects(generateMilestones(createTopicInput(draft)));
     mock.restoreAll();
   }
   const draft = createPathwayFixture();
@@ -319,7 +337,7 @@ test("save requires one complete pathway, not multiple options or too few milest
   for (const pathway of draft.pathway_options) {
     assert.equal(
       pathwaySaveSchema.safeParse({
-        topic: draft.topic,
+        topic: createTopicInput(draft),
         duration: draft.duration,
         pathway,
       }).success,
@@ -329,7 +347,7 @@ test("save requires one complete pathway, not multiple options or too few milest
   assert.equal(pathwaySaveSchema.safeParse(draft).success, false);
   assert.equal(
     pathwaySaveSchema.safeParse({
-      topic: draft.topic,
+      topic: createTopicInput(draft),
       duration: draft.duration,
       pathway: {
         ...draft.pathway_options[0],
@@ -349,18 +367,36 @@ test("save requires one complete pathway, not multiple options or too few milest
     topicSchema.safeParse({ title: " ", description: "Description" }).success,
     false,
   );
+  for (const domain of LEARNING_DOMAINS)
+    assert.equal(
+      pathwayTopicSchema.safeParse({ ...draft.topic, domain }).success,
+      true,
+    );
+  for (const domain of [undefined, "", "Marketing", "sustainability"])
+    assert.equal(
+      pathwayTopicSchema.safeParse({ ...draft.topic, domain }).success,
+      false,
+    );
+  assert.equal(
+    pathwaySaveSchema.safeParse({
+      topic: draft.topic,
+      duration: draft.duration,
+      pathway: draft.pathway_options[0],
+    }).success,
+    false,
+  );
 });
 
 test("rejects incomplete, blocked and malformed SDK output", async () => {
   const draft = createPathwayFixture();
   mockResponse(draft, "MAX_TOKENS");
-  await assert.rejects(generateMilestones(draft.topic));
+  await assert.rejects(generateMilestones(createTopicInput(draft)));
   mock.restoreAll();
   mockResponse(draft);
   mock.method(globalThis, "fetch", async () =>
     Response.json({ candidates: [] }),
   );
-  await assert.rejects(generateMilestones(draft.topic));
+  await assert.rejects(generateMilestones(createTopicInput(draft)));
   mock.restoreAll();
   mockResponse(draft);
   mock.method(globalThis, "fetch", async () =>
@@ -370,7 +406,10 @@ test("rejects incomplete, blocked and malformed SDK output", async () => {
       ],
     }),
   );
-  await assert.rejects(generateMilestones(draft.topic), SyntaxError);
+  await assert.rejects(
+    generateMilestones(createTopicInput(draft)),
+    SyntaxError,
+  );
 });
 
 test("propagates API and timeout errors and requires server configuration", async () => {
@@ -379,15 +418,24 @@ test("propagates API and timeout errors and requires server configuration", asyn
   mock.method(globalThis, "fetch", async () => {
     throw new Error("HTTP 429");
   });
-  await assert.rejects(generateMilestones(draft.topic), /429/);
+  await assert.rejects(generateMilestones(createTopicInput(draft)), /429/);
   mock.restoreAll();
   mock.method(globalThis, "fetch", async () => {
     throw new DOMException("Request timed out", "TimeoutError");
   });
-  await assert.rejects(generateMilestones(draft.topic), /timed out/);
+  await assert.rejects(
+    generateMilestones(createTopicInput(draft)),
+    /timed out/,
+  );
   delete process.env.GEMINI_API_KEY;
-  await assert.rejects(generateMilestones(draft.topic), /GEMINI_API_KEY/);
+  await assert.rejects(
+    generateMilestones(createTopicInput(draft)),
+    /GEMINI_API_KEY/,
+  );
   process.env.GEMINI_API_KEY = "test-key";
   delete process.env.GEMINI_MODEL;
-  await assert.rejects(generateMilestones(draft.topic), /GEMINI_MODEL/);
+  await assert.rejects(
+    generateMilestones(createTopicInput(draft)),
+    /GEMINI_MODEL/,
+  );
 });

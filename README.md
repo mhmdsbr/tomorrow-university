@@ -6,9 +6,10 @@ Small app to showcase learning products to user to be reviewed
 
 The app uses Drizzle ORM with PostgreSQL. Its only application table is
 `milestones`, with required milestone text columns `title` and `description`,
-plus `topic_title` and `topic_description` storing the original user input
-alongside each milestone of the chosen pathway. The topic columns are nullable to preserve
-older rows whose original input is unknown; new saves require both.
+plus `topic_title`, `topic_description`, and `topic_domain` storing the original user input
+alongside each milestone of the chosen pathway. `topic_domain` is one of the four
+fixed learning domains (see below). The topic columns are nullable to preserve
+older rows whose original input is unknown; new saves require all three.
 An ordered `steps` JSONB array stores each milestone's 3-5 steps, each with a
 title, description, and explicit `order`. New saves also include the pathway's
 `duration`, its sequential `pathway_milestone_id`, 2-3 `learning_outcomes` (JSONB),
@@ -43,6 +44,7 @@ await db.insert(milestones).values({
   description: "Complete the first learning module.",
   topicTitle: "Sustainable food systems",
   topicDescription: "Explore campus food sourcing and waste.",
+  topicDomain: "Sustainability",
   duration: "3 months",
   pathwayMilestoneId: 1,
   pathwayGroupId: crypto.randomUUID(),
@@ -134,9 +136,13 @@ not used or automatically migrated.
 
 Run `npm run dev` and open the home page:
 
-1. Enter a topic title and description. There is no predefined topic list.
-2. Select **Generate three pathway options**. The topic is sent to the configured AI provider
-   using the teaching prompt in `src/server/services/milestone-generation.ts`.
+1. Choose a domain from the fixed list (Entrepreneurship & Innovation,
+   Business & Leadership, Technology & AI, or Sustainability; defined as
+   `LEARNING_DOMAINS` in `src/shared/milestones.ts`), then enter a topic title
+   and description. Generation is rejected without a valid domain.
+2. Select **Generate three pathway options**. The domain and topic are sent to the
+   configured AI provider using the general, domain-aware teaching prompt in
+   `src/server/services/constant.ts`. The chosen domain is shown above the draft.
    The output contains `topic`, `duration: "3 months"`, and exactly three
    `pathway_options`. Each alternative has an ID, title, focus, description,
    and 3-5 sequential milestones. The alternatives are independent journeys,

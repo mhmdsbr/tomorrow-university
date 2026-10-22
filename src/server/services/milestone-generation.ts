@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { GoogleGenAI } from "@google/genai";
-import { pathwaySuggestionsSchema } from "../../shared/milestones";
+import {
+  pathwaySuggestionsSchema,
+  type PathwayTopic,
+} from "../../shared/milestones";
 import { MILESTONE_PROMPT } from "./constant";
 
 const responseSchema = z.object({
@@ -34,10 +37,7 @@ const deepseekResponseSchema = z.object({
     .min(1),
 });
 
-async function generateWithDeepSeek(topic: {
-  title: string;
-  description: string;
-}) {
+async function generateWithDeepSeek(topic: PathwayTopic) {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   const model = process.env.DEEPSEEK_MODEL ?? "deepseek-flash";
   if (!apiKey?.trim() || !model.trim()) {
@@ -80,10 +80,7 @@ async function generateWithDeepSeek(topic: {
   );
 }
 
-async function generateWithGemini(topic: {
-  title: string;
-  description: string;
-}) {
+async function generateWithGemini(topic: PathwayTopic) {
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL;
 
@@ -114,10 +111,7 @@ async function generateWithGemini(topic: {
   return pathwaySuggestionsSchema.parse(JSON.parse(text));
 }
 
-export async function generateMilestones(topic: {
-  title: string;
-  description: string;
-}) {
+export async function generateMilestones(topic: PathwayTopic) {
   const provider = process.env.LLM_PROVIDER ?? "gemini";
   switch (provider) {
     case "gemini":

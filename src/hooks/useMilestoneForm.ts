@@ -6,22 +6,24 @@ import {
   saveMilestoneDraft,
 } from "../actions/milestones";
 import type {
+  LearningDomain,
   LearningMilestone,
   MilestoneTopic,
   PathwaySuggestions,
+  PathwayTopic,
 } from "../shared/milestones";
 
 interface MilestoneFormState {
-  topicInput: MilestoneTopic;
+  topicInput: MilestoneTopic & { domain: LearningDomain | "" };
   draft: PathwaySuggestions | null;
-  draftTopic: MilestoneTopic | null;
+  draftTopic: PathwayTopic | null;
   selectedPathwayId: number | null;
   saved: boolean;
   editing: number[];
 }
 
 const initialState: MilestoneFormState = {
-  topicInput: { title: "", description: "" },
+  topicInput: { domain: "", title: "", description: "" },
   draft: null,
   draftTopic: null,
   selectedPathwayId: null,
@@ -142,7 +144,10 @@ export function useMilestoneForm() {
     }));
   }
 
-  function changeTopic(field: keyof MilestoneTopic, value: string) {
+  function changeTopic(
+    field: keyof MilestoneFormState["topicInput"],
+    value: string,
+  ) {
     setState((current) => ({
       ...current,
       topicInput: { ...current.topicInput, [field]: value },

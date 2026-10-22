@@ -2,12 +2,12 @@ import { db, milestones } from "@/server/db";
 import { randomUUID } from "node:crypto";
 import type {
   LearningPathway,
-  MilestoneTopic,
+  PathwayTopic,
 } from "@/shared/milestones";
 
 export async function insertMilestones(
   pathway: LearningPathway,
-  topic: MilestoneTopic,
+  topic: PathwayTopic,
   duration: "3 months",
 ) {
   const pathwayGroupId = randomUUID();
@@ -23,6 +23,7 @@ export async function insertMilestones(
       duration,
       topicTitle: topic.title,
       topicDescription: topic.description,
+      topicDomain: topic.domain,
       pathwayOptionId: pathway.id,
       pathwayTitle: pathway.title,
       pathwayFocus: pathway.focus,

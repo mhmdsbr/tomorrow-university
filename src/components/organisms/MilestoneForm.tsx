@@ -18,6 +18,7 @@ export default function MilestoneForm() {
     selectedPathwayId,
     saved,
     editing,
+    draftTopic,
     feedback,
     pending,
     generating,
@@ -85,6 +86,11 @@ export default function MilestoneForm() {
       {draft && (
         <>
           <div className="space-y-2">
+            {draftTopic && (
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300">
+                {draftTopic.domain}
+              </p>
+            )}
             <p className="text-lg font-semibold">
               {draft.topic.title} · {draft.duration} per pathway
             </p>

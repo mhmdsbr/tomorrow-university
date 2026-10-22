@@ -1,14 +1,17 @@
 import type { FormEventHandler } from "react";
+import { LEARNING_DOMAINS } from "../../shared/milestones";
 import { Button, LoadingSpinner, Typography } from "../atoms";
-import FormField from "./FormField";
+import FormField, { fieldClassName } from "./FormField";
+
+type TopicField = "domain" | "title" | "description";
 
 interface TopicFormProps {
   pending: boolean;
   generating?: boolean;
   hasDraft: boolean;
   onSubmit: FormEventHandler<HTMLFormElement>;
-  topic?: { title: string; description: string };
-  onTopicChange?: (field: "title" | "description", value: string) => void;
+  topic?: Record<TopicField, string>;
+  onTopicChange?: (field: TopicField, value: string) => void;
 }
 
 export default function TopicForm({
@@ -31,11 +34,38 @@ export default function TopicForm({
           Start with a little curiosity.
         </legend>
         <Typography size="sm" color="inherit" leading="relaxed">
-          Describe what your students should explore. We will turn your idea
-          into three alternative three-month pathways. Choose one, with 3-5
-          sequential milestones, learning outcomes, steps, and scenario
-          assignments.
+          Choose a domain and describe what your students should explore. We
+          will turn your idea into three alternative three-month pathways.
+          Choose one, with 3-5 sequential milestones, learning outcomes, steps,
+          and scenario assignments.
         </Typography>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="domain" className="text-sm font-medium">
+            Domain
+          </label>
+          <select
+            id="domain"
+            name="domain"
+            required
+            className={fieldClassName}
+            value={topic?.domain}
+            defaultValue={topic ? undefined : ""}
+            onChange={
+              onTopicChange
+                ? (event) => onTopicChange("domain", event.target.value)
+                : undefined
+            }
+          >
+            <option value="" disabled>
+              Choose a domain
+            </option>
+            {LEARNING_DOMAINS.map((domain) => (
+              <option key={domain} value={domain}>
+                {domain}
+              </option>
+            ))}
+          </select>
+        </div>
         <FormField
           label="Topic title"
           id="title"
@@ -49,7 +79,7 @@ export default function TopicForm({
               ? (event) => onTopicChange("title", event.target.value)
               : undefined
           }
-          placeholder="e.g. Sustainable food systems"
+          placeholder="e.g. Validating a startup idea"
         />
         <FormField
           multiline

@@ -43,6 +43,13 @@
       "when": 1792662927883,
       "tag": "0005_previous_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792687074998,
+      "tag": "0006_salty_grim_reaper",
+      "breakpoints": true
     }
   ]
 }
