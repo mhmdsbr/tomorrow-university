@@ -46,12 +46,6 @@ Restart `npm run dev` after changing the provider settings.
    gets its own `pathway_group_id`, is marked **Saved**, and becomes read-only.
    Unsaved options are never recorded.
 
-**Layout:** once options exist, the topic form collapses to a short summary
-(**Edit topic / regenerate** reopens it). On desktop the options stay in a
-sticky left column, with the chosen pathway's milestones on the right. On mobile
-the options scroll sideways. Milestones open one at a time, and the save bar stays
-pinned to the bottom.
-
 Drafts live only in page memory, so reloading the page loses unsaved work.
 Generating, editing and discarding never write to the database.
 
