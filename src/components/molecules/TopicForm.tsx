@@ -22,7 +22,7 @@ export default function TopicForm({
       onSubmit={onSubmit}
       method="post"
       data-topic-form
-      className="rounded-3xl border border-stone-200/80 bg-white/90 p-6 shadow-[0_16px_70px_-40px_rgba(28,60,44,0.3)] sm:p-8 dark:border-stone-700 dark:bg-stone-900/90"
+      className="rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_16px_70px_-40px_rgba(66,20,183,0.3)] sm:p-8 dark:border-brand-800 dark:bg-brand-950/90"
     >
       <fieldset disabled={pending} className="flex flex-col gap-5">
         <legend className="mb-2 text-xl font-semibold tracking-tight">

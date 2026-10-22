@@ -53,13 +53,13 @@ export default function MilestoneCard({
     <article
       ref={card}
       data-milestone-card
-      className="min-w-0 rounded-2xl border border-stone-200 bg-white p-5 sm:p-6 dark:border-stone-700 dark:bg-stone-900"
+      className="min-w-0 rounded-2xl border border-brand-100 bg-white p-5 sm:p-6 dark:border-brand-800 dark:bg-brand-950"
     >
       <div className="mb-5 flex items-center justify-between gap-4">
-        <span className="font-mono text-xs tracking-widest text-emerald-700 dark:text-emerald-400">
+        <span className="font-mono text-xs tracking-widest text-brand-700 dark:text-brand-300">
           MILESTONE 0{index + 1}
         </span>
-        <span className="text-xs text-stone-500">
+        <span className="text-xs text-brand-500">
           {saved ? "Saved" : "Sequential milestone"}
         </span>
       </div>
@@ -136,15 +136,15 @@ export default function MilestoneCard({
       </section>
       <section
         aria-label={`Milestone ${index + 1} steps`}
-        className="mt-6 border-t border-stone-200/70 pt-4 dark:border-stone-700"
+        className="mt-6 border-t border-brand-100/70 pt-4 dark:border-brand-800"
       >
-        <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300">
           {milestone.steps.length} learning steps
         </p>
         <ol className="space-y-5">
           {milestone.steps.map((step, stepIndex) => (
             <li key={stepIndex} className="min-w-0 break-words">
-              <p className="mb-2 text-xs font-medium text-stone-500 dark:text-stone-400">
+              <p className="mb-2 text-xs font-medium text-brand-500 dark:text-brand-400">
                 Step {step.order}
               </p>
               {editing && !saved ? (
@@ -207,7 +207,7 @@ export default function MilestoneCard({
       </section>
       <section
         aria-label={`Milestone ${index + 1} suggested reading`}
-        className="mt-6 space-y-3 border-t border-stone-200/70 pt-4 dark:border-stone-700"
+        className="mt-6 space-y-3 border-t border-brand-100/70 pt-4 dark:border-brand-800"
       >
         <h3 className="text-sm font-semibold">Suggested reading</h3>
         <ul className="space-y-3">
@@ -247,7 +247,7 @@ export default function MilestoneCard({
                   <cite className="font-medium not-italic">
                     {resource.title}
                   </cite>
-                  <span className="text-stone-500 dark:text-stone-400">
+                  <span className="text-brand-500 dark:text-brand-400">
                     {" "}
                     · {resource.author_or_publisher}
                   </span>
@@ -259,7 +259,7 @@ export default function MilestoneCard({
       </section>
       <section
         aria-label={`Milestone ${index + 1} scenario assignment`}
-        className="mt-6 space-y-4 rounded-xl bg-stone-100/70 p-4 dark:bg-stone-800/60"
+        className="mt-6 space-y-4 rounded-xl bg-brand-50/70 p-4 dark:bg-brand-900/60"
       >
         <h3 className="text-sm font-semibold">Scenario assignment</h3>
         {(
@@ -302,7 +302,7 @@ export default function MilestoneCard({
         ))}
       </section>
       {!saved && (
-        <div className="mt-5 border-t border-stone-200/70 pt-4 dark:border-stone-700">
+        <div className="mt-5 border-t border-brand-100/70 pt-4 dark:border-brand-800">
           <Button
             variant="subtle"
             disabled={pending}

@@ -100,7 +100,7 @@ export default function MilestoneForm() {
       {feedback.message && (
         <div
           role={feedback.error ? "alert" : "status"}
-          className={`rounded-xl border px-5 py-4 ${feedback.error ? "border-red-200 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200" : "border-emerald-200 bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"}`}
+          className={`rounded-xl border px-5 py-4 ${feedback.error ? "border-red-200 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200" : "border-brand-200 bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-200"}`}
         >
           <Typography size="base" color="inherit">
             {feedback.message}

@@ -30,8 +30,8 @@ export default function PathwayOptions({
             data-pathway-option
             className={`flex min-w-0 cursor-pointer flex-col gap-4 rounded-2xl border p-5 transition-colors ${
               option.id === selectedId
-                ? "border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/40"
-                : "border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
+                ? "border-brand-600 bg-brand-50/70 dark:bg-brand-950/40"
+                : "border-brand-100 bg-white dark:border-brand-800 dark:bg-brand-950"
             }`}
           >
             <span className="flex items-center justify-between gap-3 text-xs font-semibold">
@@ -43,19 +43,19 @@ export default function PathwayOptions({
                 checked={option.id === selectedId}
                 onChange={() => onChoose(option.id)}
                 aria-label={`Choose pathway ${option.id}: ${option.title}`}
-                className="h-4 w-4 accent-emerald-700"
+                className="h-4 w-4 accent-brand-700"
               />
             </span>
             <Heading as="h2" size="lg" color="inherit" weight="semibold">
               {option.title}
             </Heading>
-            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+            <p className="text-sm font-medium text-brand-700 dark:text-brand-300">
               {option.focus}
             </p>
             <Typography size="sm" color="inherit" leading="relaxed">
               {option.description}
             </Typography>
-            <span className="text-xs text-stone-500 dark:text-stone-400">
+            <span className="text-xs text-brand-500 dark:text-brand-400">
               {option.milestones.length} sequential milestones · 3 months
             </span>
           </label>

@@ -3,10 +3,10 @@ import { Heading, Typography } from "@/components/atoms";
 export default function Header() {
   return (
     <header className="mb-12 max-w-2xl space-y-5">
-      <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-800 dark:text-emerald-300">
+      <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand-700 dark:text-brand-300">
         <span
           aria-hidden="true"
-          className="h-2 w-2 rounded-full bg-emerald-600"
+          className="h-2 w-2 rounded-full bg-brand-600"
         />
         The learning studio
       </span>
@@ -19,7 +19,7 @@ export default function Header() {
       </Typography>
       <ol
         aria-label="How it works"
-        className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-stone-600 dark:text-stone-400"
+        className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-brand-600 dark:text-brand-400"
       >
         <li>01 &nbsp; Describe</li>
         <li>02 &nbsp; Review &amp; refine</li>

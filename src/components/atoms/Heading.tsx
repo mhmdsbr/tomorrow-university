@@ -12,7 +12,7 @@ type HeadingSize =
   | "sectionCompact"
   | "sectionLarge"
   | "intro";
-type HeadingColor = "inherit" | "white" | "gray-900" | "pink-gradient";
+type HeadingColor = "inherit" | "white" | "brand" | "brand-gradient";
 type HeadingWeight = "inherit" | "semibold" | "bold" | "extrabold";
 type HeadingFont = "inherit" | "mono" | "roboto";
 type HeadingAlign = "inherit" | "left" | "center";
@@ -52,8 +52,8 @@ const sizeClasses: Record<HeadingSize, string> = {
 const colorClasses: Record<HeadingColor, string> = {
   inherit: "",
   white: "text-white",
-  "gray-900": "text-gray-900",
-  "pink-gradient": "pink-gradient-text",
+  brand: "text-brand-950",
+  "brand-gradient": "brand-gradient-text",
 };
 
 const weightClasses: Record<HeadingWeight, string> = {

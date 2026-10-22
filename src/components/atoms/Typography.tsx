@@ -49,10 +49,10 @@ const sizeClasses: Record<TypographySize, string> = {
 const colorClasses: Record<TypographyColor, string> = {
   inherit: "",
   white: "text-white",
-  muted: "text-gray-400",
-  body: "text-gray-300",
-  subtle: "text-gray-700",
-  accent: "text-cyan-400",
+  muted: "text-brand-400",
+  body: "text-brand-200",
+  subtle: "text-brand-800",
+  accent: "text-brand-300",
 };
 
 const weightClasses: Record<TypographyWeight, string> = {
