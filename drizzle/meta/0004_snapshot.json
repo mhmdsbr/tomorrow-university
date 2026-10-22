@@ -1,0 +1,116 @@
+{
+  "id": "a87e7de3-143f-4eb7-aa67-bb4abcffed6b",
+  "prevId": "c7716a4d-f3c3-4767-a32c-64e9c42ed372",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.milestones": {
+      "name": "milestones",
+      "schema": "",
+      "columns": {
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "topic_title": {
+          "name": "topic_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "topic_description": {
+          "name": "topic_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "steps": {
+          "name": "steps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_milestone_id": {
+          "name": "pathway_milestone_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration": {
+          "name": "duration",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "learning_outcomes": {
+          "name": "learning_outcomes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scenario_assignment": {
+          "name": "scenario_assignment",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_group_id": {
+          "name": "pathway_group_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_option_id": {
+          "name": "pathway_option_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_title": {
+          "name": "pathway_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_focus": {
+          "name": "pathway_focus",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pathway_description": {
+          "name": "pathway_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

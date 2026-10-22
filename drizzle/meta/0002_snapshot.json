@@ -1,0 +1,62 @@
+{
+  "id": "3659434b-ca1c-43d3-bfd2-edec8212f405",
+  "prevId": "5e9444c5-948d-4702-8237-3e83afddce24",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.milestones": {
+      "name": "milestones",
+      "schema": "",
+      "columns": {
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "topic_title": {
+          "name": "topic_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "topic_description": {
+          "name": "topic_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "steps": {
+          "name": "steps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
