@@ -94,7 +94,9 @@ export default function MilestoneCard({
             <span className="mt-1 block text-xs text-brand-500 dark:text-brand-400">
               {milestone.steps.length} steps ·{" "}
               {milestone.learning_outcomes.length} outcomes ·{" "}
-              {milestone.resources.length} readings · 1 assignment
+              {milestone.resources.length}{" "}
+              {milestone.resources.length === 1 ? "reading" : "readings"} · 1
+              assignment
               {saved && " · Saved"}
               {editing && " · Editing"}
             </span>

@@ -26,6 +26,7 @@ export default function MilestoneForm() {
     topicInput,
     selectedPathwayId,
     saved,
+    savedIds,
     editing,
     draftTopic,
     feedback,
@@ -131,7 +132,7 @@ export default function MilestoneForm() {
           ref={workspace}
           className="grid scroll-mt-6 gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start"
         >
-          <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1">
+          <aside className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-4 brand-scrollbar">
             {!topicOpen && draftTopic && (
               <TopicSummary
                 topic={draftTopic}
@@ -145,7 +146,8 @@ export default function MilestoneForm() {
             <PathwayOptions
               options={draft.pathway_options}
               selectedId={selectedPathwayId}
-              disabled={pending || saved}
+              savedIds={savedIds}
+              disabled={pending}
               onChoose={chooseAndReveal}
             />
           </aside>

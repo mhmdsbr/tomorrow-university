@@ -49,3 +49,34 @@ body {
   background-clip: text;
   color: transparent;
 }
+
+/* Slim brand scrollbar for inner scroll areas (pathway list). */
+.brand-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-300) transparent;
+  scrollbar-gutter: stable;
+}
+
+@media (prefers-color-scheme: dark) {
+  .brand-scrollbar {
+    scrollbar-color: var(--color-brand-700) transparent;
+  }
+}
+
+/* Safari and older Chromium ignore scrollbar-color. */
+@supports not (scrollbar-color: auto) {
+  .brand-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .brand-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .brand-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: var(--color-brand-300);
+  }
+  .brand-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-brand-500);
+  }
+}

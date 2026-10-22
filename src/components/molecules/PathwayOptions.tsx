@@ -4,6 +4,7 @@ import { Typography } from "../atoms";
 interface PathwayOptionsProps {
   options: LearningPathway[];
   selectedId: number | null;
+  savedIds?: number[];
   disabled: boolean;
   onChoose: (id: number) => void;
 }
@@ -11,6 +12,7 @@ interface PathwayOptionsProps {
 export default function PathwayOptions({
   options,
   selectedId,
+  savedIds = [],
   disabled,
   onChoose,
 }: PathwayOptionsProps) {
@@ -20,11 +22,13 @@ export default function PathwayOptions({
         Choose your learning pathway
       </legend>
       <Typography size="xs" color="inherit" spacing="bottomMedium">
-        Three independent alternatives, not successive phases. Pick one.
+        Three independent alternatives, not successive phases. Review and save
+        as many as you like.
       </Typography>
-      <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
+      <div className="brand-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-3 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
         {options.map((option) => {
           const selected = option.id === selectedId;
+          const isSaved = savedIds.includes(option.id);
           return (
             <label
               key={option.id}
@@ -36,14 +40,21 @@ export default function PathwayOptions({
               }`}
             >
               <span className="flex items-center justify-between gap-3 text-xs font-semibold">
-                OPTION 0{option.id}
+                <span className="flex items-center gap-2">
+                  OPTION 0{option.id}
+                  {isSaved && (
+                    <span className="rounded-full bg-brand-700 px-2 py-0.5 text-[10px] tracking-wider text-white uppercase">
+                      Saved
+                    </span>
+                  )}
+                </span>
                 <input
                   type="radio"
                   name="pathway-choice"
                   value={option.id}
                   checked={selected}
                   onChange={() => onChoose(option.id)}
-                  aria-label={`Choose pathway ${option.id}: ${option.title}`}
+                  aria-label={`Choose pathway ${option.id}: ${option.title}${isSaved ? " (saved)" : ""}`}
                   className="h-4 w-4 accent-brand-700"
                 />
               </span>
