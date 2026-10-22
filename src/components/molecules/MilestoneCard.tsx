@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import type { LearningMilestone } from "../../server/shared/milestones";
+import type { LearningMilestone } from "../../shared/milestones";
 import { Button, Heading, Typography } from "../atoms";
 import FormField from "./FormField";
 
@@ -12,7 +12,6 @@ interface MilestoneCardProps {
   index: number;
   editing: boolean;
   saved: boolean;
-  archived?: boolean;
   pending: boolean;
   onToggleEdit: (index: number) => void;
   onEdit: (index: number, milestone: LearningMilestone) => void;
@@ -23,7 +22,6 @@ export default function MilestoneCard({
   index,
   editing,
   saved,
-  archived = false,
   pending,
   onToggleEdit,
   onEdit,
@@ -49,6 +47,8 @@ export default function MilestoneCard({
     { scope: card },
   );
 
+  console.log(milestone)
+
   return (
     <article
       ref={card}
@@ -60,7 +60,7 @@ export default function MilestoneCard({
           MILESTONE 0{index + 1}
         </span>
         <span className="text-xs text-stone-500">
-          {archived ? "Archived" : saved ? "Saved" : "Sequential milestone"}
+          {saved ? "Saved" : "Sequential milestone"}
         </span>
       </div>
       {editing && !saved ? (
@@ -204,6 +204,58 @@ export default function MilestoneCard({
             </li>
           ))}
         </ol>
+      </section>
+      <section
+        aria-label={`Milestone ${index + 1} suggested reading`}
+        className="mt-6 space-y-3 border-t border-stone-200/70 pt-4 dark:border-stone-700"
+      >
+        <h3 className="text-sm font-semibold">Suggested reading</h3>
+        <ul className="space-y-3">
+          {milestone.resources.map((resource, resourceIndex) => (
+            <li key={resourceIndex} className="min-w-0 break-words text-sm">
+              {editing && !saved ? (
+                <div className="flex flex-col gap-3">
+                  {(
+                    [
+                      ["title", "title"],
+                      ["author_or_publisher", "author or publisher"],
+                    ] as const
+                  ).map(([field, label]) => (
+                    <FormField
+                      key={field}
+                      label={`Resource ${resourceIndex + 1} ${label}`}
+                      id={`milestone-${index}-resource-${resourceIndex}-${field}`}
+                      value={resource[field]}
+                      required
+                      maxLength={200}
+                      onChange={(event) =>
+                        onEdit(index, {
+                          ...milestone,
+                          resources: milestone.resources.map(
+                            (value, position) =>
+                              position === resourceIndex
+                                ? { ...value, [field]: event.target.value }
+                                : value,
+                          ),
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <cite className="font-medium not-italic">
+                    {resource.title}
+                  </cite>
+                  <span className="text-stone-500 dark:text-stone-400">
+                    {" "}
+                    · {resource.author_or_publisher}
+                  </span>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
       </section>
       <section
         aria-label={`Milestone ${index + 1} scenario assignment`}

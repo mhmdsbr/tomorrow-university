@@ -23,6 +23,12 @@ export function createPathwayFixture(count = 3) {
           title: `Activity ${order}`,
           description: "You map evidence and identify uncertainty.",
         })),
+        resources: [
+          {
+            title: `Reading ${id}.${index + 1}`,
+            author_or_publisher: "University Press",
+          },
+        ],
         scenario_assignment: {
           title: "Campus simulation",
           scenario: "You advise a university committee.",

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type {
   LearningPathway,
   MilestoneTopic,
-} from "@/server/shared/milestones";
+} from "@/shared/milestones";
 
 export async function insertMilestones(
   pathway: LearningPathway,
@@ -18,6 +18,7 @@ export async function insertMilestones(
       steps: milestone.steps,
       pathwayMilestoneId: milestone.id,
       learningOutcomes: milestone.learning_outcomes,
+      resources: milestone.resources,
       scenarioAssignment: milestone.scenario_assignment,
       duration,
       topicTitle: topic.title,

@@ -4,9 +4,10 @@ import {
   pathwaySuggestionsSchema,
   pathwaySaveSchema,
   topicSchema,
-} from "../shared/milestones";
-import { createPathwayFixture } from "../shared/pathway-fixtures";
-import { generateMilestones, MILESTONE_PROMPT } from "./milestone-generation";
+} from "../../shared/milestones";
+import { createPathwayFixture } from "../../test/pathway-fixtures";
+import { MILESTONE_PROMPT } from "./constant";
+import { generateMilestones } from "./milestone-generation";
 
 const originalKey = process.env.GEMINI_API_KEY;
 const originalModel = process.env.GEMINI_MODEL;
@@ -260,6 +261,22 @@ test("validates outcomes, ordered steps, single scenario and duration in every o
       count >= 3 && count <= 5,
     );
   }
+  for (const count of [0, 1, 2, 3]) {
+    const draft = createPathwayFixture();
+    draft.pathway_options[0].milestones[1].resources = Array.from(
+      { length: count },
+      () => ({ title: "A book", author_or_publisher: "An author" }),
+    );
+    assert.equal(
+      pathwaySuggestionsSchema.safeParse(draft).success,
+      count >= 1 && count <= 2,
+    );
+  }
+  const linked = createPathwayFixture();
+  Object.assign(linked.pathway_options[0].milestones[0].resources[0], {
+    url: "https://example.com",
+  });
+  assert.equal(pathwaySuggestionsSchema.safeParse(linked).success, false);
   for (const scenario_assignment of [
     undefined,
     {},

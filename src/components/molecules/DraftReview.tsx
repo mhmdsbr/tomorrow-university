@@ -2,14 +2,13 @@ import type { FormEventHandler } from "react";
 import type {
   LearningMilestone,
   LearningPathway,
-} from "../../server/shared/milestones";
+} from "../../shared/milestones";
 import { Button, Typography } from "../atoms";
 import MilestoneCard from "./MilestoneCard";
 
 interface DraftReviewProps {
   pathway: LearningPathway;
   saved: boolean;
-  archived?: boolean;
   editing: number[];
   pending: boolean;
   onSubmit: FormEventHandler<HTMLFormElement>;
@@ -20,13 +19,14 @@ interface DraftReviewProps {
 export default function DraftReview({
   pathway,
   saved,
-  archived = false,
   editing,
   pending,
   onSubmit,
   onEdit,
   onToggleEdit,
 }: DraftReviewProps) {
+
+  
   return (
     <form onSubmit={onSubmit} method="post" data-draft-review>
       <fieldset
@@ -34,18 +34,12 @@ export default function DraftReview({
         className="flex min-w-0 flex-col gap-6"
       >
         <legend className="mb-2 text-2xl font-semibold tracking-tight">
-          {archived
-            ? "Your archived legacy draft"
-            : saved
-              ? "Your saved pathway"
-              : pathway.title}
+          {saved ? "Your saved pathway" : pathway.title}
         </legend>
         <Typography size="sm" color="inherit" leading="relaxed">
-          {archived
-            ? "Some or all milestones in this legacy draft were previously saved. This draft is read-only to prevent duplicate recording."
-            : saved
-              ? "Your chosen pathway and all its milestones have been saved."
-              : "Complete these milestones in order. Each builds on the previous work. Use Edit to refine details; saving keeps the whole pathway."}
+          {saved
+            ? "Your chosen pathway and all its milestones have been saved."
+            : "Complete these milestones in order. Each builds on the previous work. Use Edit to refine details; saving keeps the whole pathway."}
         </Typography>
         <ol
           aria-label="Sequential milestones"
@@ -57,7 +51,6 @@ export default function DraftReview({
                 milestone={milestone}
                 index={index}
                 saved={saved}
-                archived={archived}
                 editing={editing.includes(index)}
                 pending={pending}
                 onEdit={onEdit}

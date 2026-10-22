@@ -16,11 +16,19 @@ export const scenarioAssignmentSchema = z.object({
   student_output: topicSchema.shape.description,
 });
 
+export const milestoneResourceSchema = z
+  .object({
+    title: topicSchema.shape.title,
+    author_or_publisher: topicSchema.shape.title,
+  })
+  .strict();
+
 export const milestoneSchema = topicSchema
   .extend({
     id: z.number().int().min(1).max(5),
     learning_outcomes: z.array(topicSchema.shape.description).min(2).max(3),
     steps: z.array(milestoneStepSchema).min(3).max(5),
+    resources: z.array(milestoneResourceSchema).min(1).max(2),
     scenario_assignment: scenarioAssignmentSchema,
   })
   .refine(
@@ -35,6 +43,7 @@ export type MilestoneTopic = z.infer<typeof topicSchema>;
 export type MilestoneStep = z.infer<typeof milestoneStepSchema>;
 export type LearningMilestone = z.infer<typeof milestoneSchema>;
 export type ScenarioAssignment = z.infer<typeof scenarioAssignmentSchema>;
+export type MilestoneResource = z.infer<typeof milestoneResourceSchema>;
 
 export const learningPathwaySchema = topicSchema
   .extend({
@@ -74,3 +83,4 @@ export const pathwaySaveSchema = z.object({
 
 export type LearningPathway = z.infer<typeof learningPathwaySchema>;
 export type PathwaySuggestions = z.infer<typeof pathwaySuggestionsSchema>;
+export type PathwaySaveInput = z.infer<typeof pathwaySaveSchema>;

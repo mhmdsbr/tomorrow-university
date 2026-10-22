@@ -8,13 +8,30 @@ import {
 import type {
   LearningMilestone,
   MilestoneTopic,
-} from "../server/shared/milestones";
-import { useMilestoneSession } from "./useMilestoneSession";
+  PathwaySuggestions,
+} from "../shared/milestones";
+
+interface MilestoneFormState {
+  topicInput: MilestoneTopic;
+  draft: PathwaySuggestions | null;
+  draftTopic: MilestoneTopic | null;
+  selectedPathwayId: number | null;
+  saved: boolean;
+  editing: number[];
+}
+
+const initialState: MilestoneFormState = {
+  topicInput: { title: "", description: "" },
+  draft: null,
+  draftTopic: null,
+  selectedPathwayId: null,
+  saved: false,
+  editing: [],
+};
 
 export function useMilestoneForm() {
-  const { session, setSession, sessionReady, storageError } =
-    useMilestoneSession();
-  const { draft, draftTopic, selectedPathwayId, saved } = session;
+  const [state, setState] = useState(initialState);
+  const { draft, draftTopic, selectedPathwayId, saved } = state;
   const [feedback, setFeedback] = useState({ error: false, message: "" });
   const [pending, startTransition] = useTransition();
   const chosen = draft?.pathway_options.find(
@@ -32,14 +49,13 @@ export function useMilestoneForm() {
           setFeedback({ error: true, message: result.message });
           return;
         }
-        setSession((current) => ({
+        setState((current) => ({
           ...current,
           draft: result.draft,
           draftTopic: result.topic,
           selectedPathwayId: null,
           saved: false,
           editing: [],
-          legacy: false,
         }));
         setFeedback({
           error: false,
@@ -72,7 +88,7 @@ export function useMilestoneForm() {
           setFeedback({ error: true, message: result.message });
           return;
         }
-        setSession((current) => ({
+        setState((current) => ({
           ...current,
           draft: current.draft
             ? {
@@ -101,7 +117,7 @@ export function useMilestoneForm() {
   }
 
   function editMilestone(index: number, updated: LearningMilestone) {
-    setSession((current) => ({
+    setState((current) => ({
       ...current,
       draft: current.draft
         ? {
@@ -122,14 +138,14 @@ export function useMilestoneForm() {
   }
 
   function changeTopic(field: keyof MilestoneTopic, value: string) {
-    setSession((current) => ({
+    setState((current) => ({
       ...current,
       topicInput: { ...current.topicInput, [field]: value },
     }));
   }
 
   function choosePathway(id: number) {
-    setSession((current) => ({
+    setState((current) => ({
       ...current,
       selectedPathwayId: id,
       editing: [],
@@ -138,7 +154,7 @@ export function useMilestoneForm() {
   }
 
   function toggleEdit(index: number) {
-    setSession((current) => ({
+    setState((current) => ({
       ...current,
       editing: current.editing.includes(index)
         ? current.editing.filter((value) => value !== index)
@@ -147,27 +163,24 @@ export function useMilestoneForm() {
   }
 
   function discard() {
-    setSession((current) => ({
+    setState((current) => ({
       ...current,
       draft: null,
       draftTopic: null,
       selectedPathwayId: null,
       editing: [],
       saved: false,
-      legacy: false,
     }));
     setFeedback({
       error: false,
       message: saved
-        ? "Browser draft cleared. Previously saved content remains in the database."
+        ? "Draft cleared. Your saved pathway remains in the database."
         : "Draft options discarded. Nothing was recorded.",
     });
   }
 
   return {
-    ...session,
-    sessionReady,
-    storageError,
+    ...state,
     feedback,
     pending,
     chosen,

@@ -18,9 +18,6 @@ export default function MilestoneForm() {
     selectedPathwayId,
     saved,
     editing,
-    legacy,
-    sessionReady,
-    storageError,
     feedback,
     pending,
     chosen,
@@ -62,7 +59,7 @@ export default function MilestoneForm() {
   return (
     <div ref={container} className="flex w-full flex-col gap-10">
       <TopicForm
-        pending={pending || !sessionReady}
+        pending={pending}
         hasDraft={Boolean(draft)}
         onSubmit={generate}
         topic={topicInput}
@@ -78,18 +75,6 @@ export default function MilestoneForm() {
               {draft.topic.description}
             </Typography>
           </div>
-          {legacy && (
-            <p
-              role="status"
-              className="rounded-xl border border-amber-400 p-4 text-sm"
-            >
-              Your previous single-pathway draft is preserved, not presented as
-              three alternatives. Generate new options to use the new format.
-              Previously saved or partially saved legacy drafts are read-only to
-              avoid recording duplicates. Complete any blank outcomes or
-              assignments before saving an unsaved legacy draft.
-            </p>
-          )}
           <PathwayOptions
             options={draft.pathway_options}
             selectedId={selectedPathwayId}
@@ -100,7 +85,6 @@ export default function MilestoneForm() {
             <DraftReview
               pathway={chosen}
               saved={saved}
-              archived={legacy && saved}
               editing={editing}
               pending={pending}
               onSubmit={approve}
@@ -121,14 +105,6 @@ export default function MilestoneForm() {
           <Typography size="base" color="inherit">
             {feedback.message}
           </Typography>
-        </div>
-      )}
-      {storageError && (
-        <div
-          role="alert"
-          className="rounded-xl border border-amber-400 p-4 text-sm"
-        >
-          {storageError}
         </div>
       )}
     </div>

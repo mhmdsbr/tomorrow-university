@@ -36,6 +36,13 @@
       "when": 1792519900464,
       "tag": "0004_shocking_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792662927883,
+      "tag": "0005_previous_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

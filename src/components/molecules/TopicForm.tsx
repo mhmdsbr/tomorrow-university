@@ -75,8 +75,7 @@ export default function TopicForm({
         <Typography size="xs" color="inherit" leading="relaxed">
           Generation sends your topic to the configured AI provider (Google
           Gemini or DeepSeek). Nothing is saved until you select and save to the
-          database. Your work is kept in this browser tab&apos;s session across
-          reloads, until the tab is closed.
+          database. Unsaved drafts are lost when you reload or leave the page.
         </Typography>
       </fieldset>
     </form>

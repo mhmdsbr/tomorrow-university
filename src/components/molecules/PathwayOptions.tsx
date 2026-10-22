@@ -1,4 +1,4 @@
-import type { LearningPathway } from "../../server/shared/milestones";
+import type { LearningPathway } from "../../shared/milestones";
 import { Heading, Typography } from "../atoms";
 
 interface PathwayOptionsProps {

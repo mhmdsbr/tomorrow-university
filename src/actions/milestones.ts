@@ -1,14 +1,14 @@
 "use server";
 
-import { insertMilestones } from "@/server/repos/milestones";
 import { generateMilestones } from "@/server/services/milestone-generation";
+import { saveChosenPathway } from "@/server/services/milestone-save";
 import {
   pathwaySaveSchema,
   topicSchema,
   type PathwaySuggestions,
   type LearningPathway,
   type MilestoneTopic,
-} from "@/server/shared/milestones";
+} from "@/shared/milestones";
 
 type ActionResult =
   | { success: true; draft: PathwaySuggestions; topic: MilestoneTopic }
@@ -60,11 +60,7 @@ export async function saveMilestoneDraft(
   }
 
   try {
-    await insertMilestones(
-      draft.data.pathway,
-      draft.data.topic,
-      draft.data.duration,
-    );
+    await saveChosenPathway(draft.data);
     return {
       success: true,
       pathway: draft.data.pathway,
