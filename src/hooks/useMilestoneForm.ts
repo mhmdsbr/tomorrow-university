@@ -18,7 +18,7 @@ interface MilestoneFormState {
   draft: PathwaySuggestions | null;
   draftTopic: PathwayTopic | null;
   selectedPathwayId: number | null;
-  saved: boolean;
+  savedIds: number[];
   editing: number[];
   expanded: number | null;
   topicOpen: boolean;
@@ -29,7 +29,7 @@ const initialState: MilestoneFormState = {
   draft: null,
   draftTopic: null,
   selectedPathwayId: null,
-  saved: false,
+  savedIds: [],
   editing: [],
   expanded: null,
   topicOpen: false,
@@ -37,7 +37,7 @@ const initialState: MilestoneFormState = {
 
 export function useMilestoneForm() {
   const [state, setState] = useState(initialState);
-  const { draft, draftTopic, selectedPathwayId, saved } = state;
+  const { draft, draftTopic, selectedPathwayId, savedIds } = state;
   const [feedback, setFeedback] = useState({ error: false, message: "" });
   const [pending, startTransition] = useTransition();
   const [pendingAction, setPendingAction] = useState<
@@ -46,6 +46,7 @@ export function useMilestoneForm() {
   const chosen = draft?.pathway_options.find(
     (option) => option.id === selectedPathwayId,
   );
+  const saved = chosen ? savedIds.includes(chosen.id) : false;
 
   function generate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,7 +65,7 @@ export function useMilestoneForm() {
           draft: result.draft,
           draftTopic: result.topic,
           selectedPathwayId: null,
-          saved: false,
+          savedIds: [],
           editing: [],
           expanded: null,
           topicOpen: false,
@@ -72,7 +73,7 @@ export function useMilestoneForm() {
         setFeedback({
           error: false,
           message:
-            "Three alternative pathways are ready. Choose one independent learning journey to review and save.",
+            "Three alternative pathways are ready. Choose one to review; you can save one or several.",
         });
       } catch (error) {
         console.error("Pathway generation request failed:", error);
@@ -111,12 +112,14 @@ export function useMilestoneForm() {
                 ),
               }
             : null,
-          saved: true,
+          savedIds: current.savedIds.includes(result.pathway.id)
+            ? current.savedIds
+            : [...current.savedIds, result.pathway.id],
           editing: [],
         }));
         setFeedback({
           error: false,
-          message: `Your chosen pathway and all ${result.pathway.milestones.length} milestones were saved. The other options were not recorded.`,
+          message: `Option 0${result.pathway.id} and its ${result.pathway.milestones.length} milestones were saved. You can choose and save another option too.`,
         });
       } catch (error) {
         console.error("Pathway save request failed:", error);
@@ -199,18 +202,19 @@ export function useMilestoneForm() {
       editing: [],
       expanded: null,
       topicOpen: false,
-      saved: false,
+      savedIds: [],
     }));
     setFeedback({
       error: false,
-      message: saved
-        ? "Draft cleared. Your saved pathway remains in the database."
+      message: savedIds.length
+        ? "Draft cleared. Your saved pathways remain in the database."
         : "Draft options discarded. Nothing was recorded.",
     });
   }
 
   return {
     ...state,
+    saved,
     feedback,
     pending,
     generating: pending && pendingAction === "generate",

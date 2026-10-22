@@ -42,7 +42,9 @@ Restart `npm run dev` after changing the provider settings.
    3–5 steps, 1–2 suggested readings (name and author), and one
    scenario assignment. Select **Edit milestone** to change any part.
 4. **Save:** select **Save chosen pathway** to store all of its milestones in a single
-   insert. The other options are not saved.
+   insert. You can then choose another option and save it too. Each saved option
+   gets its own `pathway_group_id`, is marked **Saved**, and becomes read-only.
+   Unsaved options are never recorded.
 
 **Layout:** once options exist, the topic form collapses to a short summary
 (**Edit topic / regenerate** reopens it). On desktop the options stay in a

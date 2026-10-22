@@ -37,9 +37,9 @@ export default function TopicForm({
         </legend>
         <Typography size="sm" color="inherit" leading="relaxed">
           Choose a domain and describe what your students should explore. We
-          will turn your idea into three alternative three-month pathways.
-          Choose one, with 3-5 sequential milestones, learning outcomes, steps,
-          and scenario assignments.
+          will turn your idea into three alternative three-month pathways. Each
+          has 3-5 sequential milestones, learning outcomes, steps, and scenario
+          assignments. Review them and save one or more.
         </Typography>
         <div className="flex flex-col gap-2">
           <label htmlFor="domain" className="text-sm font-medium">

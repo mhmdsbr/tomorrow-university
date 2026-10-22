@@ -26,6 +26,7 @@ export default function MilestoneForm() {
     topicInput,
     selectedPathwayId,
     saved,
+    savedIds,
     editing,
     draftTopic,
     feedback,
@@ -145,7 +146,8 @@ export default function MilestoneForm() {
             <PathwayOptions
               options={draft.pathway_options}
               selectedId={selectedPathwayId}
-              disabled={pending || saved}
+              savedIds={savedIds}
+              disabled={pending}
               onChoose={chooseAndReveal}
             />
           </aside>

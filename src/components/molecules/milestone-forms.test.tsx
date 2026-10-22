@@ -33,6 +33,23 @@ test("three alternatives have exactly three mutually exclusive radio controls", 
     assert.match(html, new RegExp(option.focus));
   }
   assert.match(html, /independent alternatives/);
+  assert.doesNotMatch(html, />Saved</);
+});
+
+test("saved options are marked but every option stays selectable", () => {
+  const html = renderToStaticMarkup(
+    <PathwayOptions
+      options={draft.pathway_options}
+      selectedId={2}
+      savedIds={[1, 3]}
+      disabled={false}
+      onChoose={() => {}}
+    />,
+  );
+  assert.equal((html.match(/>Saved</g) ?? []).length, 2);
+  assert.match(html, /aria-label="Choose pathway 1: [^"]*\(saved\)"/);
+  assert.doesNotMatch(html, /aria-label="Choose pathway 2: [^"]*\(saved\)"/);
+  assert.doesNotMatch(html, /<fieldset disabled=""/);
 });
 
 test("chosen pathway lists all milestones as an accordion with one open", () => {
@@ -61,7 +78,7 @@ test("chosen pathway lists all milestones as an accordion with one open", () => 
   assert.equal((html.match(/Scenario assignment/g) ?? []).length, 1);
   assert.equal((html.match(/Suggested reading/g) ?? []).length, 1);
   assert.match(html, /<cite[^>]*>Reading 2\.1<\/cite>/);
-  assert.match(html, /3 steps · 2 outcomes · \d readings · 1 assignment/);
+  assert.match(html, /3 steps · 2 outcomes · (1 reading|2 readings) · 1 assignment/);
   assert.doesNotMatch(html, /href=/);
   const collapsed = renderToStaticMarkup(
     <DraftReview

@@ -35,11 +35,11 @@ export default function DraftReview({
     <form onSubmit={onSubmit} method="post" data-draft-review>
       <fieldset disabled={pending} className="flex min-w-0 flex-col gap-4">
         <legend className="mb-1 text-xl font-semibold tracking-tight">
-          {saved ? "Your saved pathway" : pathway.title}
+          {saved ? `Saved: ${pathway.title}` : pathway.title}
         </legend>
         <Typography size="sm" color="inherit" leading="relaxed">
           {saved
-            ? "Your chosen pathway and all its milestones have been saved."
+            ? "This option and all its milestones are saved. Choose another option to review and save it as well."
             : "Milestones build on each other in order. Open one to review its steps; use Edit to refine it."}
         </Typography>
         <ol
