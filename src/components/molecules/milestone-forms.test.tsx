@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { LEARNING_DOMAINS } from "../../shared/milestones";
 import { createPathwayFixture } from "../../test/pathway-fixtures";
 import DraftReview from "./DraftReview";
 import PathwayOptions from "./PathwayOptions";
@@ -91,8 +92,41 @@ test("topic form retains native validation and displays new option generation ac
   assert.match(html, /maxLength="200"/);
   assert.match(html, /maxLength="5000"/);
   assert.match(html, /Generate three pathway options/);
+  assert.match(html, /<select id="domain" name="domain" required=""/);
+  assert.match(
+    html,
+    /<option value="" disabled="" selected="">Choose a domain/,
+  );
+  for (const domain of LEARNING_DOMAINS)
+    assert.match(
+      html,
+      new RegExp(`<option value="${domain.replace("&", "&amp;")}">`),
+    );
+  assert.equal((html.match(/<option /g) ?? []).length, 5);
   const pending = renderToStaticMarkup(
     <TopicForm pending hasDraft onSubmit={handlers.onSubmit} />,
   );
   assert.match(pending, /<fieldset disabled=""/);
+  assert.doesNotMatch(pending, /animate-spin|Generating pathways/);
+  const generating = renderToStaticMarkup(
+    <TopicForm pending generating hasDraft onSubmit={handlers.onSubmit} />,
+  );
+  assert.match(generating, /aria-hidden="true" class="[^"]*animate-spin/);
+  assert.match(generating, /Generating pathways\.\.\./);
+});
+
+test("save button shows a spinner only while saving", () => {
+  const render = (saving: boolean) =>
+    renderToStaticMarkup(
+      <DraftReview
+        pathway={draft.pathway_options[0]}
+        saved={false}
+        editing={[]}
+        pending
+        saving={saving}
+        {...handlers}
+      />,
+    );
+  assert.match(render(true), /animate-spin[^>]*><\/span>Saving\.\.\./);
+  assert.doesNotMatch(render(false), /animate-spin|Saving\.\.\./);
 });

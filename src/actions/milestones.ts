@@ -4,20 +4,21 @@ import { generateMilestones } from "@/server/services/milestone-generation";
 import { saveChosenPathway } from "@/server/services/milestone-save";
 import {
   pathwaySaveSchema,
-  topicSchema,
+  pathwayTopicSchema,
   type PathwaySuggestions,
   type LearningPathway,
-  type MilestoneTopic,
+  type PathwayTopic,
 } from "@/shared/milestones";
 
 type ActionResult =
-  | { success: true; draft: PathwaySuggestions; topic: MilestoneTopic }
+  | { success: true; draft: PathwaySuggestions; topic: PathwayTopic }
   | { success: false; message: string };
 
 export async function generateMilestoneDraft(
   formData: FormData,
 ): Promise<ActionResult> {
-  const topic = topicSchema.safeParse({
+  const topic = pathwayTopicSchema.safeParse({
+    domain: formData.get("domain"),
     title: formData.get("title"),
     description: formData.get("description"),
   });
@@ -26,7 +27,7 @@ export async function generateMilestoneDraft(
     return {
       success: false,
       message:
-        "Enter a topic title (1-200 characters) and description (1-5000 characters).",
+        "Choose a domain, then enter a topic title (1-200 characters) and description (1-5000 characters).",
     };
   }
 

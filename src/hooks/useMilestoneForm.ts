@@ -6,22 +6,24 @@ import {
   saveMilestoneDraft,
 } from "../actions/milestones";
 import type {
+  LearningDomain,
   LearningMilestone,
   MilestoneTopic,
   PathwaySuggestions,
+  PathwayTopic,
 } from "../shared/milestones";
 
 interface MilestoneFormState {
-  topicInput: MilestoneTopic;
+  topicInput: MilestoneTopic & { domain: LearningDomain | "" };
   draft: PathwaySuggestions | null;
-  draftTopic: MilestoneTopic | null;
+  draftTopic: PathwayTopic | null;
   selectedPathwayId: number | null;
   saved: boolean;
   editing: number[];
 }
 
 const initialState: MilestoneFormState = {
-  topicInput: { title: "", description: "" },
+  topicInput: { domain: "", title: "", description: "" },
   draft: null,
   draftTopic: null,
   selectedPathwayId: null,
@@ -34,6 +36,9 @@ export function useMilestoneForm() {
   const { draft, draftTopic, selectedPathwayId, saved } = state;
   const [feedback, setFeedback] = useState({ error: false, message: "" });
   const [pending, startTransition] = useTransition();
+  const [pendingAction, setPendingAction] = useState<
+    "generate" | "save" | null
+  >(null);
   const chosen = draft?.pathway_options.find(
     (option) => option.id === selectedPathwayId,
   );
@@ -42,6 +47,7 @@ export function useMilestoneForm() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     setFeedback({ error: false, message: "" });
+    setPendingAction("generate");
     startTransition(async () => {
       try {
         const result = await generateMilestoneDraft(formData);
@@ -77,6 +83,7 @@ export function useMilestoneForm() {
     event.preventDefault();
     if (!draft || !draftTopic || !chosen || saved || pending) return;
     setFeedback({ error: false, message: "" });
+    setPendingAction("save");
     startTransition(async () => {
       try {
         const result = await saveMilestoneDraft({
@@ -137,7 +144,10 @@ export function useMilestoneForm() {
     }));
   }
 
-  function changeTopic(field: keyof MilestoneTopic, value: string) {
+  function changeTopic(
+    field: keyof MilestoneFormState["topicInput"],
+    value: string,
+  ) {
     setState((current) => ({
       ...current,
       topicInput: { ...current.topicInput, [field]: value },
@@ -183,6 +193,8 @@ export function useMilestoneForm() {
     ...state,
     feedback,
     pending,
+    generating: pending && pendingAction === "generate",
+    saving: pending && pendingAction === "save",
     chosen,
     generate,
     approve,

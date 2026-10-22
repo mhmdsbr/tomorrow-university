@@ -1,5 +1,6 @@
 import { integer, jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import type {
+  LearningDomain,
   MilestoneResource,
   MilestoneStep,
   ScenarioAssignment,
@@ -10,6 +11,7 @@ export const milestones = pgTable("milestones", {
   description: text("description").notNull(),
   topicTitle: text("topic_title"),
   topicDescription: text("topic_description"),
+  topicDomain: text("topic_domain").$type<LearningDomain>(),
   steps: jsonb("steps").$type<MilestoneStep[]>(),
   pathwayMilestoneId: integer("pathway_milestone_id"),
   duration: text("duration"),

@@ -39,3 +39,9 @@ export function createPathwayFixture(count = 3) {
     })),
   };
 }
+
+export function createTopicInput(
+  draft: ReturnType<typeof createPathwayFixture> = createPathwayFixture(),
+) {
+  return { ...draft.topic, domain: "Sustainability" as const };
+}

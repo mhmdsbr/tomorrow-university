@@ -5,6 +5,19 @@ export const topicSchema = z.object({
   description: z.string().trim().min(1).max(5000),
 });
 
+export const LEARNING_DOMAINS = [
+  "Entrepreneurship & Innovation",
+  "Business & Leadership",
+  "Technology & AI",
+  "Sustainability",
+] as const;
+
+export const learningDomainSchema = z.enum(LEARNING_DOMAINS);
+
+export const pathwayTopicSchema = topicSchema.extend({
+  domain: learningDomainSchema,
+});
+
 export const milestoneStepSchema = topicSchema.extend({
   order: z.number().int().min(1).max(5),
 });
@@ -40,6 +53,8 @@ export const milestoneSchema = topicSchema
   );
 
 export type MilestoneTopic = z.infer<typeof topicSchema>;
+export type LearningDomain = z.infer<typeof learningDomainSchema>;
+export type PathwayTopic = z.infer<typeof pathwayTopicSchema>;
 export type MilestoneStep = z.infer<typeof milestoneStepSchema>;
 export type LearningMilestone = z.infer<typeof milestoneSchema>;
 export type ScenarioAssignment = z.infer<typeof scenarioAssignmentSchema>;
@@ -76,7 +91,7 @@ export const pathwaySuggestionsSchema = z
   );
 
 export const pathwaySaveSchema = z.object({
-  topic: topicSchema,
+  topic: pathwayTopicSchema,
   duration: z.literal("3 months"),
   pathway: learningPathwaySchema,
 });
