@@ -188,6 +188,9 @@ UI components live in `src/components/`, organized by atomic design:
 
 - `atoms/`: shared buttons, headings, and typography.
 - `molecules/`: labeled form fields, topic form, milestone cards, and draft review.
+  `molecules/milestone-card/` holds the card's sections (summary, outcomes,
+  steps, suggested reading, scenario assignment), each switching between
+  reading and edit mode.
 - `organisms/MilestoneForm.tsx`: UI composition and scoped GSAP animations.
 - `src/hooks/useMilestoneForm.ts`: generation, editing, pathway selection,
   approval, and feedback workflow.

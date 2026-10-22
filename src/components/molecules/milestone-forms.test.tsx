@@ -95,4 +95,26 @@ test("topic form retains native validation and displays new option generation ac
     <TopicForm pending hasDraft onSubmit={handlers.onSubmit} />,
   );
   assert.match(pending, /<fieldset disabled=""/);
+  assert.doesNotMatch(pending, /animate-spin|Generating pathways/);
+  const generating = renderToStaticMarkup(
+    <TopicForm pending generating hasDraft onSubmit={handlers.onSubmit} />,
+  );
+  assert.match(generating, /aria-hidden="true" class="[^"]*animate-spin/);
+  assert.match(generating, /Generating pathways\.\.\./);
+});
+
+test("save button shows a spinner only while saving", () => {
+  const render = (saving: boolean) =>
+    renderToStaticMarkup(
+      <DraftReview
+        pathway={draft.pathway_options[0]}
+        saved={false}
+        editing={[]}
+        pending
+        saving={saving}
+        {...handlers}
+      />,
+    );
+  assert.match(render(true), /animate-spin[^>]*><\/span>Saving\.\.\./);
+  assert.doesNotMatch(render(false), /animate-spin|Saving\.\.\./);
 });

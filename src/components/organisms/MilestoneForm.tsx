@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useMilestoneForm } from "@/hooks/useMilestoneForm";
-import { Button, Typography } from "../atoms";
+import { Button, LoadingSpinner, Typography } from "../atoms";
 import TopicForm from "../molecules/TopicForm";
 import DraftReview from "../molecules/DraftReview";
 import PathwayOptions from "../molecules/PathwayOptions";
@@ -20,6 +20,8 @@ export default function MilestoneForm() {
     editing,
     feedback,
     pending,
+    generating,
+    saving,
     chosen,
     generate,
     approve,
@@ -60,11 +62,26 @@ export default function MilestoneForm() {
     <div ref={container} className="flex w-full flex-col gap-10">
       <TopicForm
         pending={pending}
+        generating={generating}
         hasDraft={Boolean(draft)}
         onSubmit={generate}
         topic={topicInput}
         onTopicChange={changeTopic}
       />
+      {generating && (
+        <div className="flex items-center gap-4 rounded-2xl border border-brand-200 bg-brand-50 p-5 text-brand-900 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100">
+          <LoadingSpinner
+            label="Generating pathway options"
+            className="border-brand-700 dark:border-brand-300"
+          />
+          <div>
+            <p className="font-semibold">Generating three pathway options…</p>
+            <Typography size="sm" color="inherit" leading="relaxed">
+              This can take up to a minute. Keep this page open.
+            </Typography>
+          </div>
+        </div>
+      )}
       {draft && (
         <>
           <div className="space-y-2">
@@ -87,6 +104,7 @@ export default function MilestoneForm() {
               saved={saved}
               editing={editing}
               pending={pending}
+              saving={saving}
               onSubmit={approve}
               onEdit={editMilestone}
               onToggleEdit={toggleEdit}

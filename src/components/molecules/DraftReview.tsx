@@ -3,7 +3,7 @@ import type {
   LearningMilestone,
   LearningPathway,
 } from "../../shared/milestones";
-import { Button, Typography } from "../atoms";
+import { Button, LoadingSpinner, Typography } from "../atoms";
 import MilestoneCard from "./MilestoneCard";
 
 interface DraftReviewProps {
@@ -11,6 +11,7 @@ interface DraftReviewProps {
   saved: boolean;
   editing: number[];
   pending: boolean;
+  saving?: boolean;
   onSubmit: FormEventHandler<HTMLFormElement>;
   onEdit: (index: number, milestone: LearningMilestone) => void;
   onToggleEdit: (index: number) => void;
@@ -21,6 +22,7 @@ export default function DraftReview({
   saved,
   editing,
   pending,
+  saving = false,
   onSubmit,
   onEdit,
   onToggleEdit,
@@ -61,7 +63,8 @@ export default function DraftReview({
         </ol>
         {!saved && (
           <Button variant="solid" type="submit" disabled={pending}>
-            {pending
+            {saving && <LoadingSpinner size="sm" />}
+            {saving
               ? "Saving..."
               : `Save chosen pathway (${pathway.milestones.length} milestones)`}
           </Button>

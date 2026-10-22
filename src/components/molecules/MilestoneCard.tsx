@@ -2,8 +2,12 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import type { LearningMilestone } from "../../shared/milestones";
-import { Button, Heading, Typography } from "../atoms";
-import FormField from "./FormField";
+import { Button } from "../atoms";
+import MilestoneAssignment from "./milestone-card/MilestoneAssignment";
+import MilestoneOutcomes from "./milestone-card/MilestoneOutcomes";
+import MilestoneResources from "./milestone-card/MilestoneResources";
+import MilestoneSteps from "./milestone-card/MilestoneSteps";
+import MilestoneSummary from "./milestone-card/MilestoneSummary";
 
 gsap.registerPlugin(useGSAP);
 
@@ -47,7 +51,14 @@ export default function MilestoneCard({
     { scope: card },
   );
 
-  console.log(milestone)
+  console.log(milestone);
+
+  const section = {
+    milestone,
+    index,
+    editable: editing && !saved,
+    onChange: (updated: LearningMilestone) => onEdit(index, updated),
+  };
 
   return (
     <article
@@ -63,244 +74,11 @@ export default function MilestoneCard({
           {saved ? "Saved" : "Sequential milestone"}
         </span>
       </div>
-      {editing && !saved ? (
-        <div className="flex flex-col gap-4">
-          <FormField
-            label="Title"
-            id={`milestone-title-${index}`}
-            value={milestone.title}
-            onChange={(event) =>
-              onEdit(index, { ...milestone, title: event.target.value })
-            }
-            required
-            maxLength={200}
-          />
-          <FormField
-            multiline
-            label="Description"
-            id={`milestone-description-${index}`}
-            value={milestone.description}
-            onChange={(event) =>
-              onEdit(index, { ...milestone, description: event.target.value })
-            }
-            required
-            maxLength={5000}
-            rows={5}
-          />
-        </div>
-      ) : (
-        <div className="space-y-3 break-words">
-          <Heading as="h2" size="lg" color="inherit" weight="semibold">
-            {milestone.title}
-          </Heading>
-          <Typography size="sm" color="inherit" leading="relaxed">
-            {milestone.description}
-          </Typography>
-        </div>
-      )}
-      <section
-        aria-label={`Milestone ${index + 1} learning outcomes`}
-        className="mt-6 space-y-3"
-      >
-        <h3 className="text-sm font-semibold">What you will be able to do</h3>
-        <ul className="space-y-3">
-          {milestone.learning_outcomes.map((outcome, outcomeIndex) => (
-            <li key={outcomeIndex} className="text-sm leading-relaxed">
-              {editing && !saved ? (
-                <FormField
-                  multiline
-                  label={`Learning outcome ${outcomeIndex + 1}`}
-                  id={`milestone-${index}-outcome-${outcomeIndex}`}
-                  value={outcome}
-                  required
-                  maxLength={5000}
-                  rows={2}
-                  onChange={(event) =>
-                    onEdit(index, {
-                      ...milestone,
-                      learning_outcomes: milestone.learning_outcomes.map(
-                        (value, position) =>
-                          position === outcomeIndex
-                            ? event.target.value
-                            : value,
-                      ),
-                    })
-                  }
-                />
-              ) : (
-                outcome
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section
-        aria-label={`Milestone ${index + 1} steps`}
-        className="mt-6 border-t border-brand-100/70 pt-4 dark:border-brand-800"
-      >
-        <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300">
-          {milestone.steps.length} learning steps
-        </p>
-        <ol className="space-y-5">
-          {milestone.steps.map((step, stepIndex) => (
-            <li key={stepIndex} className="min-w-0 break-words">
-              <p className="mb-2 text-xs font-medium text-brand-500 dark:text-brand-400">
-                Step {step.order}
-              </p>
-              {editing && !saved ? (
-                <div className="flex flex-col gap-3">
-                  <FormField
-                    label={`Step ${stepIndex + 1} title`}
-                    id={`milestone-${index}-step-${stepIndex}-title`}
-                    value={step.title}
-                    onChange={(event) =>
-                      onEdit(index, {
-                        ...milestone,
-                        steps: milestone.steps.map((value, position) =>
-                          position === stepIndex
-                            ? { ...value, title: event.target.value }
-                            : value,
-                        ),
-                      })
-                    }
-                    required
-                    maxLength={200}
-                  />
-                  <FormField
-                    multiline
-                    label={`Step ${stepIndex + 1} description`}
-                    id={`milestone-${index}-step-${stepIndex}-description`}
-                    value={step.description}
-                    onChange={(event) =>
-                      onEdit(index, {
-                        ...milestone,
-                        steps: milestone.steps.map((value, position) =>
-                          position === stepIndex
-                            ? { ...value, description: event.target.value }
-                            : value,
-                        ),
-                      })
-                    }
-                    required
-                    maxLength={5000}
-                    rows={3}
-                  />
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Heading
-                    as="h3"
-                    size="inherit"
-                    color="inherit"
-                    weight="semibold"
-                  >
-                    {step.title}
-                  </Heading>
-                  <Typography size="sm" color="inherit" leading="relaxed">
-                    {step.description}
-                  </Typography>
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
-      </section>
-      <section
-        aria-label={`Milestone ${index + 1} suggested reading`}
-        className="mt-6 space-y-3 border-t border-brand-100/70 pt-4 dark:border-brand-800"
-      >
-        <h3 className="text-sm font-semibold">Suggested reading</h3>
-        <ul className="space-y-3">
-          {milestone.resources.map((resource, resourceIndex) => (
-            <li key={resourceIndex} className="min-w-0 break-words text-sm">
-              {editing && !saved ? (
-                <div className="flex flex-col gap-3">
-                  {(
-                    [
-                      ["title", "title"],
-                      ["author_or_publisher", "author or publisher"],
-                    ] as const
-                  ).map(([field, label]) => (
-                    <FormField
-                      key={field}
-                      label={`Resource ${resourceIndex + 1} ${label}`}
-                      id={`milestone-${index}-resource-${resourceIndex}-${field}`}
-                      value={resource[field]}
-                      required
-                      maxLength={200}
-                      onChange={(event) =>
-                        onEdit(index, {
-                          ...milestone,
-                          resources: milestone.resources.map(
-                            (value, position) =>
-                              position === resourceIndex
-                                ? { ...value, [field]: event.target.value }
-                                : value,
-                          ),
-                        })
-                      }
-                    />
-                  ))}
-                </div>
-              ) : (
-                <>
-                  <cite className="font-medium not-italic">
-                    {resource.title}
-                  </cite>
-                  <span className="text-brand-500 dark:text-brand-400">
-                    {" "}
-                    · {resource.author_or_publisher}
-                  </span>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section
-        aria-label={`Milestone ${index + 1} scenario assignment`}
-        className="mt-6 space-y-4 rounded-xl bg-brand-50/70 p-4 dark:bg-brand-900/60"
-      >
-        <h3 className="text-sm font-semibold">Scenario assignment</h3>
-        {(
-          [
-            ["title", "Assignment title"],
-            ["scenario", "Scenario"],
-            ["task", "Your task"],
-            ["student_output", "Your output"],
-          ] as const
-        ).map(([field, label]) => (
-          <div key={field} className="break-words">
-            {editing && !saved ? (
-              <FormField
-                multiline
-                label={label}
-                id={`milestone-${index}-assignment-${field}`}
-                value={milestone.scenario_assignment[field]}
-                required
-                maxLength={field === "title" ? 200 : 5000}
-                rows={field === "title" ? 2 : 3}
-                onChange={(event) =>
-                  onEdit(index, {
-                    ...milestone,
-                    scenario_assignment: {
-                      ...milestone.scenario_assignment,
-                      [field]: event.target.value,
-                    },
-                  })
-                }
-              />
-            ) : (
-              <>
-                <p className="mb-1 text-xs font-semibold">{label}</p>
-                <Typography size="sm" color="inherit" leading="relaxed">
-                  {milestone.scenario_assignment[field]}
-                </Typography>
-              </>
-            )}
-          </div>
-        ))}
-      </section>
+      <MilestoneSummary {...section} />
+      <MilestoneOutcomes {...section} />
+      <MilestoneSteps {...section} />
+      <MilestoneResources {...section} />
+      <MilestoneAssignment {...section} />
       {!saved && (
         <div className="mt-5 border-t border-brand-100/70 pt-4 dark:border-brand-800">
           <Button

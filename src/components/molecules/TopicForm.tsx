@@ -1,9 +1,10 @@
 import type { FormEventHandler } from "react";
-import { Button, Typography } from "../atoms";
+import { Button, LoadingSpinner, Typography } from "../atoms";
 import FormField from "./FormField";
 
 interface TopicFormProps {
   pending: boolean;
+  generating?: boolean;
   hasDraft: boolean;
   onSubmit: FormEventHandler<HTMLFormElement>;
   topic?: { title: string; description: string };
@@ -12,6 +13,7 @@ interface TopicFormProps {
 
 export default function TopicForm({
   pending,
+  generating = false,
   hasDraft,
   onSubmit,
   topic,
@@ -66,8 +68,9 @@ export default function TopicForm({
           placeholder="Who is learning, what should they discover, and why does it matter?"
         />
         <Button variant="solid" type="submit" disabled={pending}>
-          {pending
-            ? "Working..."
+          {generating && <LoadingSpinner size="sm" />}
+          {generating
+            ? "Generating pathways..."
             : hasDraft
               ? "Generate new pathway options"
               : "Generate three pathway options"}
