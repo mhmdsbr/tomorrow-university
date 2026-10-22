@@ -1,13 +1,12 @@
 import 'dotenv/config'
 import { defineConfig } from 'drizzle-kit'
+import { resolveDatabaseUrl } from './src/server/db/url'
 
-const dbUrl = process.env.NODE_ENV === 'production'
-  ? process.env.DB_URL_PROD
-  : process.env.DB_URL_LOCAL
+const { name, url } = resolveDatabaseUrl('migrations')
 
-if (!dbUrl) {
+if (!url) {
   throw new Error(
-    'Missing DB_URL_LOCAL or DB_URL_PROD — check your .env file or Vercel environment variables.'
+    `Missing ${name} — check your .env file or Vercel environment variables.`
   )
 }
 
@@ -16,7 +15,7 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: dbUrl,
+    url,
   },
   verbose: true,
   strict: true,

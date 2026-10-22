@@ -31,8 +31,29 @@ Only that pathway is recorded, not the other alternatives.
    maintains its own migration history in the separate `drizzle` schema.
 
 After changing the schema, run `npm run db:generate` and then
-`npm run db:migrate`. Both the app and Drizzle CLI use `DB_URL_PROD` when
-`NODE_ENV=production`, and `DB_URL_LOCAL` otherwise.
+`npm run db:migrate`. Outside Vercel, both the app and Drizzle CLI use
+`DB_URL_PROD` when `NODE_ENV=production`, and `DB_URL_LOCAL` otherwise.
+
+### Production on Vercel with Neon
+
+Production uses the Neon database connected through Vercel's Neon integration.
+On Vercel (`VERCEL` is set), connection settings come from the variables the
+integration injects; `DB_URL_PROD` and `DB_URL_LOCAL` are ignored there:
+
+- The app uses `DATABASE_URL` (pooled) through Neon's serverless HTTP driver
+  (`@neondatabase/serverless` with `drizzle-orm/neon-http`), which keeps no
+  TCP connections open between serverless invocations.
+- Migrations use `DATABASE_URL_UNPOOLED` (direct connection).
+
+Vercel runs the `vercel-build` script (`drizzle-kit migrate && next build`)
+instead of `build`, so committed migrations are applied before every
+deployment. With Neon preview branching enabled, each preview deployment
+migrates its own database branch. Keep migrations backward compatible, because
+the previous deployment keeps serving traffic until the new one is live.
+
+The driver is chosen by host: any `*.neon.tech` URL uses the HTTP driver;
+other URLs (such as the local Docker database) use `pg`. Logic lives in
+`src/server/db/url.ts` and `src/server/db/index.ts`.
 
 Use the database only in server-side code:
 
