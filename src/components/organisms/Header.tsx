@@ -8,14 +8,14 @@ export default function Header() {
           aria-hidden="true"
           className="h-2 w-2 rounded-full bg-brand-600"
         />
-        The learning studio
+        University Tomorrow
       </span>
       <Heading as="h1" size="4xl" color="inherit" weight="semibold">
-        Big ideas. Meaningful milestones.
+        Learn while challenging yourself
       </Heading>
       <Typography size="lg" color="inherit" leading="relaxed">
-        Shape a learning journey that matters. Start with a topic, refine three
-        alternatives, and choose the pathway that inspires you.
+        Start with a topic, refine three
+        alternatives, and choose the pathway that inspires students.
       </Typography>
       <ol
         aria-label="How it works"

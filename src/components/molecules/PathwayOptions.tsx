@@ -22,7 +22,7 @@ export default function PathwayOptions({
       <Typography size="xs" color="inherit" spacing="bottomMedium">
         Three independent alternatives, not successive phases. Pick one.
       </Typography>
-      <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
+      <div className="brand-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-3 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
         {options.map((option) => {
           const selected = option.id === selectedId;
           return (
