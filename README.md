@@ -84,7 +84,12 @@ const allMilestones = await db.select().from(milestones);
 
 ## Generating and choosing a learning pathway
 
-Set `GEMINI_API_KEY` and `GEMINI_MODEL` in your untracked `.env` file.
+Select the server-side provider with `LLM_PROVIDER=gemini` or
+`LLM_PROVIDER=deepseek` in your untracked `.env` file. If omitted, Gemini remains
+the default. Unknown values produce an error; providers are never switched
+automatically after a failure.
+
+For Gemini, set `GEMINI_API_KEY` and `GEMINI_MODEL`.
 Choose a Gemini model supporting JSON-schema structured output (for example,
 `gemini-3.8-flash`, subject to availability in your account). The key is used
 only on the server; never prefix it with `NEXT_PUBLIC_`.
@@ -93,10 +98,40 @@ Generation uses the official `@google/genai` SDK through
 `GoogleGenAI.models.generateContent()`, with a 60-second timeout and JSON-schema
 structured output. Responses are validated with Zod before becoming drafts.
 
+For DeepSeek, create an API key in the [DeepSeek platform](https://platform.deepseek.com/api_keys)
+and configure:
+
+```dotenv
+LLM_PROVIDER=deepseek
+DEEPSEEK_API_KEY=your-key-here
+DEEPSEEK_MODEL=deepseek-flash
+```
+
+The `deepseek-flash` model is used when `DEEPSEEK_MODEL` is omitted.
+Requests use server-side `fetch` to
+`https://api.deepseek.com/chat/completions`, with a 60-second timeout
+and a 32768 output-token limit. No additional SDK is required.
+Requests enable JSON output (`response_format: { type: "json_object" }`)
+and disable thinking mode to focus the token budget on the requested pathways.
+You may set `DEEPSEEK_MODEL=deepseek-v4-pro` instead. Choose a model supporting
+these request options and the output budget.
+
+DeepSeek JSON output ensures JSON syntax, not the complete pathway schema.
+Both providers must pass the same Zod validation;
+truncated responses, invalid JSON, and invalid pathway structures are rejected,
+not repaired or saved. API keys stay on the server; never use `NEXT_PUBLIC_`
+for any provider credential. Restart the development server after changing the
+provider configuration.
+
+See [DeepSeek's API reference](https://api-docs.deepseek.com/api/create-chat-completion/).
+This replaces the LLM7 integration; set `LLM_PROVIDER=deepseek` instead of
+`llm7` and configure a new DeepSeek key. Old LLM7 environment variables are
+not used or automatically migrated.
+
 Run `npm run dev` and open the home page:
 
 1. Enter a topic title and description. There is no predefined topic list.
-2. Select **Generate three pathway options**. The topic is sent to Google Gemini
+2. Select **Generate three pathway options**. The topic is sent to the configured AI provider
    using the teaching prompt in `src/server/services/milestone-generation.ts`.
    The output contains `topic`, `duration: "3 months"`, and exactly three
    `pathway_options`. Each alternative has an ID, title, focus, description,
@@ -167,7 +202,7 @@ Server actions live in `actions/`. The page remains a Server Component; only
 the form organism and its dependencies are included in the interactive client UI.
 
 Run `npm run test:milestones` for generation and validation tests. These exercise
-the Gemini SDK with mocked network responses and do not send external requests
+the Gemini SDK and DeepSeek chat API with mocked network responses and do not send external requests
 or require an API key.
 Run `npm run test:components` to check the topic and draft-review rendering,
 field validation attributes, and pending/saved controls.

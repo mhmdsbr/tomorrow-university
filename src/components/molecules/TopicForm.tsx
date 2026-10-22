@@ -73,9 +73,10 @@ export default function TopicForm({
               : "Generate three pathway options"}
         </Button>
         <Typography size="xs" color="inherit" leading="relaxed">
-          Generation sends your topic to Google Gemini. Nothing is saved until
-          you select and save to the database. Your work is kept in this browser
-          tab&apos;s session across reloads, until the tab is closed.
+          Generation sends your topic to the configured AI provider (Google
+          Gemini or DeepSeek). Nothing is saved until you select and save to the
+          database. Your work is kept in this browser tab&apos;s session across
+          reloads, until the tab is closed.
         </Typography>
       </fieldset>
     </form>

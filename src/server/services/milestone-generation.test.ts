@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { afterEach, mock, test } from "node:test";
+import { afterEach, beforeEach, mock, test } from "node:test";
 import {
   pathwaySuggestionsSchema,
   pathwaySaveSchema,
@@ -10,12 +10,26 @@ import { generateMilestones, MILESTONE_PROMPT } from "./milestone-generation";
 
 const originalKey = process.env.GEMINI_API_KEY;
 const originalModel = process.env.GEMINI_MODEL;
+const originalProvider = process.env.LLM_PROVIDER;
+const originalDeepSeekKey = process.env.DEEPSEEK_API_KEY;
+const originalDeepSeekModel = process.env.DEEPSEEK_MODEL;
+beforeEach(() => {
+  delete process.env.LLM_PROVIDER;
+  delete process.env.DEEPSEEK_API_KEY;
+  delete process.env.DEEPSEEK_MODEL;
+});
 afterEach(() => {
   mock.restoreAll();
   if (originalKey === undefined) delete process.env.GEMINI_API_KEY;
   else process.env.GEMINI_API_KEY = originalKey;
   if (originalModel === undefined) delete process.env.GEMINI_MODEL;
   else process.env.GEMINI_MODEL = originalModel;
+  if (originalProvider === undefined) delete process.env.LLM_PROVIDER;
+  else process.env.LLM_PROVIDER = originalProvider;
+  if (originalDeepSeekKey === undefined) delete process.env.DEEPSEEK_API_KEY;
+  else process.env.DEEPSEEK_API_KEY = originalDeepSeekKey;
+  if (originalDeepSeekModel === undefined) delete process.env.DEEPSEEK_MODEL;
+  else process.env.DEEPSEEK_MODEL = originalDeepSeekModel;
 });
 
 function mockResponse(output: unknown, finishReason = "STOP") {
@@ -57,6 +71,138 @@ test("SDK requests the exact prompt and structured three-option schema", async (
   assert.equal(request.generationConfig.responseMimeType, "application/json");
   assert.equal(request.generationConfig.maxOutputTokens, 32768);
   assert.ok(options.signal instanceof AbortSignal);
+});
+
+function mockDeepSeekResponse(output: unknown, finishReason = "stop") {
+  process.env.LLM_PROVIDER = "deepseek";
+  process.env.DEEPSEEK_API_KEY = "test-deepseek-key";
+  const response: typeof fetch = async () =>
+    Response.json({
+      choices: [
+        {
+          finish_reason: finishReason,
+          message: { content: JSON.stringify(output) },
+        },
+      ],
+    });
+  return mock.method(globalThis, "fetch", response);
+}
+
+test("DeepSeek sends the same prompt with JSON output and thinking disabled", async () => {
+  const draft = createPathwayFixture();
+  const fetchMock = mockDeepSeekResponse(draft);
+  assert.deepEqual(await generateMilestones(draft.topic), draft);
+  const [url, options] = fetchMock.mock.calls[0].arguments;
+  assert.equal(url, "https://api.deepseek.com/chat/completions");
+  assert.ok(options);
+  assert.equal(
+    new Headers(options.headers).get("Authorization"),
+    "Bearer test-deepseek-key",
+  );
+  assert.equal(
+    new Headers(options.headers).get("Content-Type"),
+    "application/json",
+  );
+  assert.equal(options.method, "POST");
+  assert.equal(options.cache, "no-store");
+  assert.ok(options.signal instanceof AbortSignal);
+  assert.deepEqual(JSON.parse(String(options.body)), {
+    model: "deepseek-flash",
+    messages: [
+      { role: "system", content: MILESTONE_PROMPT },
+      { role: "user", content: JSON.stringify(draft.topic) },
+    ],
+    max_tokens: 32768,
+    response_format: { type: "json_object" },
+    thinking: { type: "disabled" },
+    temperature: 0,
+    stream: false,
+  });
+});
+
+test("DeepSeek supports a configured model", async () => {
+  const draft = createPathwayFixture();
+  const fetchMock = mockDeepSeekResponse(draft);
+  process.env.DEEPSEEK_MODEL = "deepseek-v4-pro";
+  await generateMilestones(draft.topic);
+  const [, options] = fetchMock.mock.calls[0].arguments;
+  const request = JSON.parse(String(options?.body));
+  assert.equal(request.model, "deepseek-v4-pro");
+  assert.equal(request.messages[0].content, MILESTONE_PROMPT);
+});
+
+test("DeepSeek rejects truncated output, invalid pathway structures and malformed responses", async () => {
+  const draft = createPathwayFixture();
+  for (const reason of ["length", "content_filter", "tool_calls", ""]) {
+    mockDeepSeekResponse(draft, reason);
+    await assert.rejects(generateMilestones(draft.topic));
+    mock.restoreAll();
+  }
+  mockDeepSeekResponse({
+    ...draft,
+    pathway_options: draft.pathway_options.slice(0, 2),
+  });
+  await assert.rejects(generateMilestones(draft.topic));
+  mock.restoreAll();
+  process.env.LLM_PROVIDER = "deepseek";
+  for (const response of [
+    { choices: [] },
+    { choices: [{ finish_reason: "stop", message: { content: null } }] },
+    { choices: [{ finish_reason: "stop", message: { content: "not JSON" } }] },
+    {
+      choices: [
+        { finish_reason: "stop", message: { content: "```json\n{}\n```" } },
+      ],
+    },
+  ]) {
+    mock.method(globalThis, "fetch", async () => Response.json(response));
+    await assert.rejects(generateMilestones(draft.topic));
+    mock.restoreAll();
+  }
+});
+
+test("DeepSeek exposes HTTP and network errors without falling back to Gemini", async () => {
+  const draft = createPathwayFixture();
+  mockDeepSeekResponse(draft);
+  mock.restoreAll();
+  for (const status of [401, 429, 500]) {
+    const fetchMock = mock.method(
+      globalThis,
+      "fetch",
+      async () => new Response("Provider error", { status }),
+    );
+    await assert.rejects(
+      generateMilestones(draft.topic),
+      new RegExp(`HTTP ${status}`),
+    );
+    assert.equal(fetchMock.mock.calls.length, 1);
+    mock.restoreAll();
+  }
+  mock.method(globalThis, "fetch", async () => {
+    throw new DOMException("Request timed out", "TimeoutError");
+  });
+  await assert.rejects(generateMilestones(draft.topic), /timed out/);
+});
+
+test("invalid provider configuration fails before making a network request", async () => {
+  const fetchMock = mock.method(globalThis, "fetch", async () => {
+    throw new Error("Unexpected network request");
+  });
+  const topic = createPathwayFixture().topic;
+  process.env.LLM_PROVIDER = "unknown";
+  await assert.rejects(generateMilestones(topic), /LLM_PROVIDER/);
+  process.env.LLM_PROVIDER = "nvidia";
+  await assert.rejects(generateMilestones(topic), /LLM_PROVIDER/);
+  process.env.LLM_PROVIDER = "llm7";
+  await assert.rejects(generateMilestones(topic), /LLM_PROVIDER/);
+  process.env.LLM_PROVIDER = "deepseek";
+  await assert.rejects(generateMilestones(topic), /DEEPSEEK_API_KEY/);
+  process.env.DEEPSEEK_API_KEY = " ";
+  await assert.rejects(generateMilestones(topic), /DEEPSEEK_API_KEY/);
+  process.env.DEEPSEEK_API_KEY = "test-key";
+  process.env.DEEPSEEK_MODEL = " ";
+  await assert.rejects(generateMilestones(topic), /DEEPSEEK_MODEL/);
+  assert.equal(fetchMock.mock.calls.length, 0);
 });
 
 test("requires exactly three options, each with 3-5 sequential milestones", async () => {

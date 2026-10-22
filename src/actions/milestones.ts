@@ -38,7 +38,7 @@ export async function generateMilestoneDraft(
     return {
       success: false,
       message:
-        "Could not generate three pathway suggestions. Check the server's Gemini configuration and try again. Nothing was saved.",
+        "Could not generate three pathway suggestions. Check the server's AI provider configuration and try again. Nothing was saved.",
     };
   }
 }
