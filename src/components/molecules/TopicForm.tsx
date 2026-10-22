@@ -12,6 +12,7 @@ interface TopicFormProps {
   onSubmit: FormEventHandler<HTMLFormElement>;
   topic?: Record<TopicField, string>;
   onTopicChange?: (field: TopicField, value: string) => void;
+  onCancel?: () => void;
 }
 
 export default function TopicForm({
@@ -21,6 +22,7 @@ export default function TopicForm({
   onSubmit,
   topic,
   onTopicChange,
+  onCancel,
 }: TopicFormProps) {
   return (
     <form
@@ -94,17 +96,25 @@ export default function TopicForm({
               ? (event) => onTopicChange("description", event.target.value)
               : undefined
           }
-          rows={4}
+          rows={2}
+          className="field-sizing-content max-h-60 min-h-20"
           placeholder="Who is learning, what should they discover, and why does it matter?"
         />
-        <Button variant="solid" type="submit" disabled={pending}>
-          {generating && <LoadingSpinner size="sm" />}
-          {generating
-            ? "Generating pathways..."
-            : hasDraft
-              ? "Generate new pathway options"
-              : "Generate three pathway options"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Button variant="solid" type="submit" disabled={pending}>
+            {generating && <LoadingSpinner size="sm" />}
+            {generating
+              ? "Generating pathways..."
+              : hasDraft
+                ? "Generate new pathway options"
+                : "Generate three pathway options"}
+          </Button>
+          {onCancel && (
+            <Button variant="subtle" disabled={pending} onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+        </div>
         <Typography size="xs" color="inherit" leading="relaxed">
           Generation sends your topic to the configured AI provider (Google
           Gemini or DeepSeek). Nothing is saved until you select and save to the

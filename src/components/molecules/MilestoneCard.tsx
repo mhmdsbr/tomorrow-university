@@ -17,6 +17,8 @@ interface MilestoneCardProps {
   editing: boolean;
   saved: boolean;
   pending: boolean;
+  expanded: boolean;
+  onToggleExpand: (index: number) => void;
   onToggleEdit: (index: number) => void;
   onEdit: (index: number, milestone: LearningMilestone) => void;
 }
@@ -27,9 +29,14 @@ export default function MilestoneCard({
   editing,
   saved,
   pending,
+  expanded,
+  onToggleExpand,
   onToggleEdit,
   onEdit,
 }: MilestoneCardProps) {
+  // Editing keeps the card open so its required fields stay visible.
+  const open = expanded || editing;
+  const bodyId = `milestone-${index}-details`;
   const card = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -51,8 +58,6 @@ export default function MilestoneCard({
     { scope: card },
   );
 
-  console.log(milestone);
-
   const section = {
     milestone,
     index,
@@ -64,31 +69,66 @@ export default function MilestoneCard({
     <article
       ref={card}
       data-milestone-card
-      className="min-w-0 rounded-2xl border border-brand-100 bg-white p-5 sm:p-6 dark:border-brand-800 dark:bg-brand-950"
+      className={`min-w-0 rounded-2xl border bg-white dark:bg-brand-950 ${
+        open
+          ? "border-brand-300 dark:border-brand-700"
+          : "border-brand-100 dark:border-brand-800"
+      }`}
     >
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <span className="font-mono text-xs tracking-widest text-brand-700 dark:text-brand-300">
-          MILESTONE 0{index + 1}
-        </span>
-        <span className="text-xs text-brand-500">
-          {saved ? "Saved" : "Sequential milestone"}
-        </span>
-      </div>
-      <MilestoneSummary {...section} />
-      <MilestoneOutcomes {...section} />
-      <MilestoneSteps {...section} />
-      <MilestoneResources {...section} />
-      <MilestoneAssignment {...section} />
-      {!saved && (
-        <div className="mt-5 border-t border-brand-100/70 pt-4 dark:border-brand-800">
-          <Button
-            variant="subtle"
-            disabled={pending}
-            ariaLabel={`${editing ? "Done editing" : "Edit"} milestone ${index + 1}`}
-            onClick={() => onToggleEdit(index)}
+      <h3>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          disabled={editing}
+          onClick={() => onToggleExpand(index)}
+          className="flex w-full cursor-pointer items-start gap-4 rounded-2xl p-4 text-left focus-visible:outline-2 focus-visible:outline-brand-600 disabled:cursor-default sm:px-5"
+        >
+          <span className="mt-0.5 font-mono text-xs tracking-widest text-brand-700 dark:text-brand-300">
+            0{index + 1}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold leading-snug wrap-break-word">
+              {milestone.title}
+            </span>
+            <span className="mt-1 block text-xs text-brand-500 dark:text-brand-400">
+              {milestone.steps.length} steps ·{" "}
+              {milestone.learning_outcomes.length} outcomes ·{" "}
+              {milestone.resources.length} readings · 1 assignment
+              {saved && " · Saved"}
+              {editing && " · Editing"}
+            </span>
+          </span>
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 text-brand-500 transition-transform ${open ? "rotate-180" : ""}`}
           >
-            {editing ? "Done editing" : "Edit milestone"}
-          </Button>
+            ▾
+          </span>
+        </button>
+      </h3>
+      {open && (
+        <div
+          id={bodyId}
+          className="border-t border-brand-100/70 px-5 pt-4 pb-5 sm:px-6 dark:border-brand-800"
+        >
+          <MilestoneSummary {...section} />
+          <MilestoneOutcomes {...section} />
+          <MilestoneSteps {...section} />
+          <MilestoneResources {...section} />
+          <MilestoneAssignment {...section} />
+          {!saved && (
+            <div className="mt-5 border-t border-brand-100/70 pt-4 dark:border-brand-800">
+              <Button
+                variant="subtle"
+                disabled={pending}
+                ariaLabel={`${editing ? "Done editing" : "Edit"} milestone ${index + 1}`}
+                onClick={() => onToggleEdit(index)}
+              >
+                {editing ? "Done editing" : "Edit milestone"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </article>

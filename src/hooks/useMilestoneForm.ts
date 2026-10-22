@@ -20,6 +20,8 @@ interface MilestoneFormState {
   selectedPathwayId: number | null;
   saved: boolean;
   editing: number[];
+  expanded: number | null;
+  topicOpen: boolean;
 }
 
 const initialState: MilestoneFormState = {
@@ -29,6 +31,8 @@ const initialState: MilestoneFormState = {
   selectedPathwayId: null,
   saved: false,
   editing: [],
+  expanded: null,
+  topicOpen: false,
 };
 
 export function useMilestoneForm() {
@@ -62,6 +66,8 @@ export function useMilestoneForm() {
           selectedPathwayId: null,
           saved: false,
           editing: [],
+          expanded: null,
+          topicOpen: false,
         }));
         setFeedback({
           error: false,
@@ -159,6 +165,7 @@ export function useMilestoneForm() {
       ...current,
       selectedPathwayId: id,
       editing: [],
+      expanded: 0,
     }));
     setFeedback({ error: false, message: "" });
   }
@@ -172,6 +179,17 @@ export function useMilestoneForm() {
     }));
   }
 
+  function toggleExpand(index: number) {
+    setState((current) => ({
+      ...current,
+      expanded: current.expanded === index ? null : index,
+    }));
+  }
+
+  function setTopicOpen(topicOpen: boolean) {
+    setState((current) => ({ ...current, topicOpen }));
+  }
+
   function discard() {
     setState((current) => ({
       ...current,
@@ -179,6 +197,8 @@ export function useMilestoneForm() {
       draftTopic: null,
       selectedPathwayId: null,
       editing: [],
+      expanded: null,
+      topicOpen: false,
       saved: false,
     }));
     setFeedback({
@@ -202,6 +222,9 @@ export function useMilestoneForm() {
     changeTopic,
     choosePathway,
     toggleEdit,
+    toggleExpand,
+    openTopic: () => setTopicOpen(true),
+    closeTopic: () => setTopicOpen(false),
     discard,
   };
 }

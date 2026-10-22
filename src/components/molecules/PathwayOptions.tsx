@@ -1,5 +1,5 @@
 import type { LearningPathway } from "../../shared/milestones";
-import { Heading, Typography } from "../atoms";
+import { Typography } from "../atoms";
 
 interface PathwayOptionsProps {
   options: LearningPathway[];
@@ -16,50 +16,54 @@ export default function PathwayOptions({
 }: PathwayOptionsProps) {
   return (
     <fieldset disabled={disabled} className="min-w-0">
-      <legend className="mb-2 text-2xl font-semibold">
+      <legend className="mb-1 text-lg font-semibold">
         Choose your learning pathway
       </legend>
-      <Typography size="sm" color="inherit" spacing="bottomLarge">
-        These are independent alternatives, not successive phases. Choose one
-        three-month journey, then review its sequential milestones below.
+      <Typography size="xs" color="inherit" spacing="bottomMedium">
+        Three independent alternatives, not successive phases. Pick one.
       </Typography>
-      <div className="grid gap-4 lg:grid-cols-3">
-        {options.map((option) => (
-          <label
-            key={option.id}
-            data-pathway-option
-            className={`flex min-w-0 cursor-pointer flex-col gap-4 rounded-2xl border p-5 transition-colors ${
-              option.id === selectedId
-                ? "border-brand-600 bg-brand-50/70 dark:bg-brand-950/40"
-                : "border-brand-100 bg-white dark:border-brand-800 dark:bg-brand-950"
-            }`}
-          >
-            <span className="flex items-center justify-between gap-3 text-xs font-semibold">
-              OPTION 0{option.id}
-              <input
-                type="radio"
-                name="pathway-choice"
-                value={option.id}
-                checked={option.id === selectedId}
-                onChange={() => onChoose(option.id)}
-                aria-label={`Choose pathway ${option.id}: ${option.title}`}
-                className="h-4 w-4 accent-brand-700"
-              />
-            </span>
-            <Heading as="h2" size="lg" color="inherit" weight="semibold">
-              {option.title}
-            </Heading>
-            <p className="text-sm font-medium text-brand-700 dark:text-brand-300">
-              {option.focus}
-            </p>
-            <Typography size="sm" color="inherit" leading="relaxed">
-              {option.description}
-            </Typography>
-            <span className="text-xs text-brand-500 dark:text-brand-400">
-              {option.milestones.length} sequential milestones · 3 months
-            </span>
-          </label>
-        ))}
+      <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
+        {options.map((option) => {
+          const selected = option.id === selectedId;
+          return (
+            <label
+              key={option.id}
+              data-pathway-option
+              className={`flex w-[82%] min-w-0 shrink-0 cursor-pointer snap-start flex-col gap-2 rounded-2xl border p-4 transition-colors sm:w-[45%] lg:w-auto ${
+                selected
+                  ? "border-brand-600 bg-brand-50/70 dark:bg-brand-950/40"
+                  : "border-brand-100 bg-white hover:border-brand-300 dark:border-brand-800 dark:bg-brand-950"
+              }`}
+            >
+              <span className="flex items-center justify-between gap-3 text-xs font-semibold">
+                OPTION 0{option.id}
+                <input
+                  type="radio"
+                  name="pathway-choice"
+                  value={option.id}
+                  checked={selected}
+                  onChange={() => onChoose(option.id)}
+                  aria-label={`Choose pathway ${option.id}: ${option.title}`}
+                  className="h-4 w-4 accent-brand-700"
+                />
+              </span>
+              <h2 className="text-base font-semibold leading-snug">
+                {option.title}
+              </h2>
+              <p className="text-sm font-medium text-brand-700 dark:text-brand-300">
+                {option.focus}
+              </p>
+              <p
+                className={`text-sm leading-relaxed ${selected ? "" : "line-clamp-2"}`}
+              >
+                {option.description}
+              </p>
+              <span className="text-xs text-brand-500 dark:text-brand-400">
+                {option.milestones.length} milestones · 3 months
+              </span>
+            </label>
+          );
+        })}
       </div>
     </fieldset>
   );

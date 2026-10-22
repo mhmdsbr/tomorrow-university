@@ -8,8 +8,15 @@ type FormFieldProps = { label: string; id: string } & (
 export const fieldClassName =
   "w-full min-w-0 rounded-xl border border-brand-100 bg-white/80 px-4 py-3 text-sm leading-relaxed text-brand-950 outline-none transition-colors placeholder:text-brand-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/10 disabled:opacity-60 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-50";
 
-export default function FormField({ label, id, ...props }: FormFieldProps) {
-  const className = fieldClassName;
+export default function FormField({
+  label,
+  id,
+  className: extraClassName,
+  ...props
+}: FormFieldProps) {
+  const className = extraClassName
+    ? `${fieldClassName} ${extraClassName}`
+    : fieldClassName;
   let control;
 
   if (props.multiline) {
