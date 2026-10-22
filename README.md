@@ -46,6 +46,20 @@ Restart `npm run dev` after changing the provider settings.
    gets its own `pathway_group_id`, is marked **Saved**, and becomes read-only.
    Unsaved options are never recorded.
 
+**Domain check:** the domain shapes how the pathways are written, so a
+mismatched domain (e.g. a sustainability topic under Business & Leadership)
+gives off-target results.
+
+- Each domain shows a short "Covers: …" hint, and the Generate button names
+  the chosen domain.
+- With the pathways, the AI also returns a `domain_fit` object
+  (`matches`, `suggested_domain`, `reason`). This adds no extra request.
+- The pathways are always written for the domain you chose. If the AI thinks
+  the topic clearly belongs elsewhere, an amber notice offers
+  **Regenerate as X** or **Keep Y**.
+- Topics that span several domains count as a match.
+- `domain_fit` is not saved.
+
 Drafts live only in page memory, so reloading the page loses unsaved work.
 Generating, editing and discarding never write to the database.
 

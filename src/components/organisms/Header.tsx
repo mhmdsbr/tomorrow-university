@@ -14,8 +14,8 @@ export default function Header() {
         Learn while challenging yourself
       </Heading>
       <Typography size="lg" color="inherit" leading="relaxed">
-        Start with a topic, refine three
-        alternatives, and choose the pathway that inspires students.
+        Start with a topic, refine three alternatives, and choose the pathway
+        that inspires students.
       </Typography>
       <ol
         aria-label="How it works"

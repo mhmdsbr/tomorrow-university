@@ -7,6 +7,7 @@ import DraftReview from "./DraftReview";
 import PathwayOptions from "./PathwayOptions";
 import TopicForm from "./TopicForm";
 import TopicSummary from "./TopicSummary";
+import DomainFitNotice from "./DomainFitNotice";
 
 const handlers = {
   onSubmit: () => {},
@@ -78,7 +79,10 @@ test("chosen pathway lists all milestones as an accordion with one open", () => 
   assert.equal((html.match(/Scenario assignment/g) ?? []).length, 1);
   assert.equal((html.match(/Suggested reading/g) ?? []).length, 1);
   assert.match(html, /<cite[^>]*>Reading 2\.1<\/cite>/);
-  assert.match(html, /3 steps · 2 outcomes · (1 reading|2 readings) · 1 assignment/);
+  assert.match(
+    html,
+    /3 steps · 2 outcomes · (1 reading|2 readings) · 1 assignment/,
+  );
   assert.doesNotMatch(html, /href=/);
   const collapsed = renderToStaticMarkup(
     <DraftReview
@@ -216,4 +220,51 @@ test("topic summary collapses the input to one compact block", () => {
   assert.match(html, /Edit topic \/ regenerate/);
   assert.match(html, /Discard draft/);
   assert.doesNotMatch(html, /<input|<textarea|<select/);
+});
+
+test("topic form explains the chosen domain and names it on the button", () => {
+  const html = renderToStaticMarkup(
+    <TopicForm
+      pending={false}
+      hasDraft={false}
+      onSubmit={handlers.onSubmit}
+      topic={{ domain: "Sustainability", title: "", description: "" }}
+      onTopicChange={() => {}}
+    />,
+  );
+  assert.match(html, /aria-describedby="domain-hint"/);
+  assert.match(html, /id="domain-hint"[^>]*>Covers: Climate, environment/);
+  assert.match(html, /Generate Sustainability pathways/);
+  const empty = renderToStaticMarkup(
+    <TopicForm
+      pending={false}
+      hasDraft
+      onSubmit={handlers.onSubmit}
+      topic={{ domain: "", title: "", description: "" }}
+      onTopicChange={() => {}}
+    />,
+  );
+  assert.match(empty, /Pick the domain that best matches your topic/);
+  assert.match(empty, /Generate new pathway options/);
+});
+
+test("domain-fit notice offers to regenerate in the suggested domain or keep the choice", () => {
+  const html = renderToStaticMarkup(
+    <DomainFitNotice
+      fit={{
+        matches: false,
+        suggested_domain: "Sustainability",
+        reason: "The topic focuses on carbon reduction.",
+      }}
+      chosenDomain="Business & Leadership"
+      pending={false}
+      onRegenerate={() => {}}
+      onKeep={() => {}}
+    />,
+  );
+  assert.match(html, /role="alert"/);
+  assert.match(html, /closer to Sustainability than Business &amp; Leadership/);
+  assert.match(html, /The topic focuses on carbon reduction\./);
+  assert.match(html, />Regenerate as Sustainability</);
+  assert.match(html, />Keep Business &amp; Leadership</);
 });

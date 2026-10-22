@@ -22,6 +22,7 @@ interface MilestoneFormState {
   editing: number[];
   expanded: number | null;
   topicOpen: boolean;
+  domainFitDismissed: boolean;
 }
 
 const initialState: MilestoneFormState = {
@@ -33,6 +34,7 @@ const initialState: MilestoneFormState = {
   editing: [],
   expanded: null,
   topicOpen: false,
+  domainFitDismissed: false,
 };
 
 export function useMilestoneForm() {
@@ -50,7 +52,23 @@ export function useMilestoneForm() {
 
   function generate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    runGeneration(new FormData(event.currentTarget));
+  }
+
+  function regenerateWithDomain(domain: LearningDomain) {
+    if (!draftTopic || pending) return;
+    setState((current) => ({
+      ...current,
+      topicInput: { ...current.topicInput, domain },
+    }));
+    const formData = new FormData();
+    formData.set("domain", domain);
+    formData.set("title", draftTopic.title);
+    formData.set("description", draftTopic.description);
+    runGeneration(formData);
+  }
+
+  function runGeneration(formData: FormData) {
     setFeedback({ error: false, message: "" });
     setPendingAction("generate");
     startTransition(async () => {
@@ -69,6 +87,7 @@ export function useMilestoneForm() {
           editing: [],
           expanded: null,
           topicOpen: false,
+          domainFitDismissed: false,
         }));
         setFeedback({
           error: false,
@@ -202,6 +221,7 @@ export function useMilestoneForm() {
       editing: [],
       expanded: null,
       topicOpen: false,
+      domainFitDismissed: false,
       savedIds: [],
     }));
     setFeedback({
@@ -227,6 +247,9 @@ export function useMilestoneForm() {
     choosePathway,
     toggleEdit,
     toggleExpand,
+    regenerateWithDomain,
+    keepDomain: () =>
+      setState((current) => ({ ...current, domainFitDismissed: true })),
     openTopic: () => setTopicOpen(true),
     closeTopic: () => setTopicOpen(false),
     discard,

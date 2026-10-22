@@ -1,5 +1,9 @@
 import type { FormEventHandler } from "react";
-import { LEARNING_DOMAINS } from "../../shared/milestones";
+import {
+  LEARNING_DOMAIN_HINTS,
+  LEARNING_DOMAINS,
+  type LearningDomain,
+} from "../../shared/milestones";
 import { Button, LoadingSpinner, Typography } from "../atoms";
 import FormField, { fieldClassName } from "./FormField";
 
@@ -24,6 +28,9 @@ export default function TopicForm({
   onTopicChange,
   onCancel,
 }: TopicFormProps) {
+  const domain = LEARNING_DOMAINS.includes(topic?.domain as LearningDomain)
+    ? (topic?.domain as LearningDomain)
+    : null;
   return (
     <form
       onSubmit={onSubmit}
@@ -49,6 +56,7 @@ export default function TopicForm({
             id="domain"
             name="domain"
             required
+            aria-describedby="domain-hint"
             className={fieldClassName}
             value={topic?.domain}
             defaultValue={topic ? undefined : ""}
@@ -67,6 +75,15 @@ export default function TopicForm({
               </option>
             ))}
           </select>
+          <p
+            id="domain-hint"
+            aria-live="polite"
+            className="text-xs leading-relaxed text-brand-600 dark:text-brand-300"
+          >
+            {domain
+              ? `Covers: ${LEARNING_DOMAIN_HINTS[domain]}`
+              : "Pick the domain that best matches your topic."}
+          </p>
         </div>
         <FormField
           label="Topic title"
@@ -105,9 +122,11 @@ export default function TopicForm({
             {generating && <LoadingSpinner size="sm" />}
             {generating
               ? "Generating pathways..."
-              : hasDraft
-                ? "Generate new pathway options"
-                : "Generate three pathway options"}
+              : domain
+                ? `Generate ${hasDraft ? "new " : ""}${domain} pathways`
+                : hasDraft
+                  ? "Generate new pathway options"
+                  : "Generate three pathway options"}
           </Button>
           {onCancel && (
             <Button variant="subtle" disabled={pending} onClick={onCancel}>

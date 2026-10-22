@@ -332,6 +332,33 @@ test("validates outcomes, ordered steps, single scenario and duration in every o
   );
 });
 
+test("requires a domain-fit verdict with a valid suggested domain", () => {
+  const draft = createPathwayFixture();
+  const mismatch = {
+    ...draft,
+    domain_fit: {
+      matches: false,
+      suggested_domain: "Business & Leadership",
+      reason: "The topic is about managing teams.",
+    },
+  };
+  assert.equal(pathwaySuggestionsSchema.safeParse(mismatch).success, true);
+  const { domain_fit: omitted, ...missing } = draft;
+  void omitted;
+  assert.equal(pathwaySuggestionsSchema.safeParse(missing).success, false);
+  for (const domain_fit of [
+    { ...draft.domain_fit, suggested_domain: "Marketing" },
+    { ...draft.domain_fit, reason: " " },
+    { ...draft.domain_fit, matches: "no" },
+  ])
+    assert.equal(
+      pathwaySuggestionsSchema.safeParse({ ...draft, domain_fit }).success,
+      false,
+    );
+  assert.match(MILESTONE_PROMPT, /"domain_fit": \{/);
+  assert.match(MILESTONE_PROMPT, /Do not switch domains yourself/);
+});
+
 test("save requires one complete pathway, not multiple options or too few milestones", () => {
   const draft = createPathwayFixture(5);
   for (const pathway of draft.pathway_options) {
