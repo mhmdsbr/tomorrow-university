@@ -1,235 +1,121 @@
-# tomorrow-university
+# Tomorrow University – Learning Pathway Generator
 
-Small app to showcase learning products to user to be reviewed
+A Next.js app for designing three-month learning pathways for bachelor's students.
+You choose a domain and describe a topic. An AI model suggests three alternative
+pathways. You choose one, edit it, and save it to PostgreSQL.
+
+**Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, GSAP, Zod 4,
+Drizzle ORM, PostgreSQL (local Docker or Neon on Vercel), Gemini or DeepSeek.
+
+## Quick start
+
+```bash
+npm install
+docker compose up -d postgres   # local PostgreSQL
+cp .env.example .env            # or create .env by hand, see below
+npm run db:migrate              # create the tables
+npm run dev                     # http://localhost:3000
+```
+
+## Environment variables
+
+Keep these in `.env`, which is not committed. Never prefix them with `NEXT_PUBLIC_`.
+
+| Variable | Purpose |
+| --- | --- |
+| `DB_URL_LOCAL` | Local PostgreSQL URL, used when not on Vercel |
+| `DATABASE_URL` / `DATABASE_URL_UNPOOLED` | Neon URLs; set automatically by the Vercel Neon integration |
+| `LLM_PROVIDER` | `gemini` (default) or `deepseek` |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | Needed for Gemini, e.g. `gemini-3.8-flash` |
+| `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | Needed for DeepSeek; the model defaults to `deepseek-flash` |
+
+Restart `npm run dev` after changing the provider settings.
+
+## How it works
+
+1. **Choose a domain:** Entrepreneurship & Innovation, Business & Leadership,
+   Technology & AI, or Sustainability. Then enter a topic title (max 200
+   characters) and description (max 5000).
+2. **Generate:** the AI returns exactly three independent pathways. Each has
+   3–5 sequential milestones over about 12 weeks.
+3. **Review:** choose a pathway. Each milestone has 2–3 learning outcomes,
+   3–5 steps, 1–2 suggested readings (name and author), and one
+   scenario assignment. Select **Edit milestone** to change any part.
+4. **Save:** select **Save chosen pathway** to store all of its milestones in a single
+   insert. The other options are not saved.
+
+**Layout:** once options exist, the topic form collapses to a short summary
+(**Edit topic / regenerate** reopens it). On desktop the options stay in a
+sticky left column, with the chosen pathway's milestones on the right. On mobile
+the options scroll sideways. Milestones open one at a time, and the save bar stays
+pinned to the bottom.
+
+Drafts live only in page memory, so reloading the page loses unsaved work.
+Generating, editing and discarding never write to the database.
+
+**AI output:** both providers use the prompt in `src/server/services/constant.ts`.
+Requests time out after 60 seconds and are limited to 32768 output tokens.
+Every response is checked against the same Zod schema, and invalid,
+truncated or extra-field responses (such as URLs in readings) are rejected.
+AI-suggested readings can still be wrong, so check them before assigning.
+
+## Project structure
+
+```text
+app/                    page, layout, global styles (brand color #4214b7)
+src/actions/            server actions: validate input, call services
+src/server/services/    AI generation, saving, prompt (constant.ts)
+src/server/repos/       database queries (the only place that imports the db)
+src/server/db/          Drizzle schema and connection
+src/shared/             Zod schemas, types, LEARNING_DOMAINS
+src/hooks/              useMilestoneForm: client workflow state
+src/components/         atoms → molecules (incl. milestone-card/) → organisms
+src/test/               test fixtures
+drizzle/                SQL migrations
+```
+
+Request flow: action → service → repository, for example
+`saveMilestoneDraft` → `saveChosenPathway` → `insertMilestones`.
 
 ## Database
 
-The app uses Drizzle ORM with PostgreSQL. Its only application table is
-`milestones`, with required milestone text columns `title` and `description`,
-plus `topic_title`, `topic_description`, and `topic_domain` storing the original user input
-alongside each milestone of the chosen pathway. `topic_domain` is one of the four
-fixed learning domains (see below). The topic columns are nullable to preserve
-older rows whose original input is unknown; new saves require all three.
-An ordered `steps` JSONB array stores each milestone's 3-5 steps, each with a
-title, description, and explicit `order`. New saves also include the pathway's
-`duration`, its sequential `pathway_milestone_id`, 2-3 `learning_outcomes` (JSONB),
-1-2 suggested `resources` (JSONB: title and author_or_publisher, no links),
-and one `scenario_assignment` (JSONB: title, scenario, task, student_output).
-Added columns are nullable for pre-existing rows; new generation and saving
-require all pathway fields. Legacy step arrays are preserved without modification.
-The pathway milestone ID is an ordinal within a pathway, not a database primary
-key. Duplicate titles are allowed.
-Each newly saved pathway is grouped by a server-generated `pathway_group_id`
-(UUID) shared by all its milestone rows. `pathway_option_id`, `pathway_title`,
-`pathway_focus`, and `pathway_description` preserve the chosen suggestion.
-Only that pathway is recorded, not the other alternatives.
+Drizzle manages one table, `milestones`, with one row per saved milestone. Rows from the
+same saved pathway share a `pathway_group_id`. Each row stores:
 
-1. Set `DB_URL_LOCAL` in your untracked `.env` file to your local PostgreSQL
-   connection URL. Set `DB_URL_PROD` in your production environment.
-2. Start the local database with `docker compose up -d postgres`.
-3. Run `npm run db:migrate` to apply the committed migration. Drizzle also
-   maintains its own migration history in the separate `drizzle` schema.
+- the milestone itself: `title`, `description`, `steps`, `learning_outcomes`,
+  `resources`, `scenario_assignment`, and `pathway_milestone_id`, its position in the pathway
+- the chosen pathway: `pathway_option_id`, `pathway_title`, `pathway_focus`,
+  `pathway_description`, `duration`
+- the original input: `topic_title`, `topic_description`, `topic_domain`
 
-After changing the schema, run `npm run db:generate` and then
-`npm run db:migrate`. Outside Vercel, both the app and Drizzle CLI use
-`DB_URL_PROD` when `NODE_ENV=production`, and `DB_URL_LOCAL` otherwise.
+Columns added later are nullable so older rows stay valid. New saves fill every column.
 
-### Production on Vercel with Neon
+After changing `src/server/db/schema.ts`, run `npm run db:generate` and then
+`npm run db:migrate`.
 
-Production uses the Neon database connected through Vercel's Neon integration.
-On Vercel (`VERCEL` is set), connection settings come from the variables the
-integration injects; `DB_URL_PROD` and `DB_URL_LOCAL` are ignored there:
+## Deploying to Vercel with Neon
 
-- The app uses `DATABASE_URL` (pooled) through Neon's serverless HTTP driver
-  (`@neondatabase/serverless` with `drizzle-orm/neon-http`), which keeps no
-  TCP connections open between serverless invocations.
-- Migrations use `DATABASE_URL_UNPOOLED` (direct connection).
+- Connect the Neon database to the project in Vercel (**Storage**). This adds
+  `DATABASE_URL` and `DATABASE_URL_UNPOOLED`.
+- On Vercel the app connects through Neon's serverless HTTP driver, and migrations
+  use the unpooled URL.
+- Vercel runs `vercel-build` (`drizzle-kit migrate && next build`), so new
+  migrations are applied on every deploy. Don't override the Build Command.
+  Keep migrations backward compatible.
+- Add the AI provider variables in Vercel as well.
+- Any `*.neon.tech` URL uses the Neon driver, and other URLs use `pg`. See
+  `src/server/db/url.ts`.
 
-Vercel runs the `vercel-build` script (`drizzle-kit migrate && next build`)
-instead of `build`, so committed migrations are applied before every
-deployment. With Neon preview branching enabled, each preview deployment
-migrates its own database branch. Keep migrations backward compatible, because
-the previous deployment keeps serving traffic until the new one is live.
+There is no authentication or rate limiting yet. Add both before making the app
+public.
 
-The driver is chosen by host: any `*.neon.tech` URL uses the HTTP driver;
-other URLs (such as the local Docker database) use `pg`. Logic lives in
-`src/server/db/url.ts` and `src/server/db/index.ts`.
+## Scripts
 
-Use the database only in server-side code:
-
-```ts
-import { db, milestones } from "@/server/db";
-
-await db.insert(milestones).values({
-  title: "First milestone",
-  description: "Complete the first learning module.",
-  topicTitle: "Sustainable food systems",
-  topicDescription: "Explore campus food sourcing and waste.",
-  topicDomain: "Sustainability",
-  duration: "3 months",
-  pathwayMilestoneId: 1,
-  pathwayGroupId: crypto.randomUUID(),
-  pathwayOptionId: 1,
-  pathwayTitle: "Campus systems analysis",
-  pathwayFocus: "Systems mapping and evidence",
-  pathwayDescription:
-    "You investigate campus food flows and justify an improvement.",
-  learningOutcomes: [
-    "You can explain the main campus food flows.",
-    "You can map the impacts of a food system.",
-  ],
-  resources: [
-    { title: "Thinking in Systems: A Primer", author_or_publisher: "Donella H. Meadows" },
-  ],
-  scenarioAssignment: {
-    title: "Simulated campus food review",
-    scenario: "Your university is reviewing food procurement.",
-    task: "You map impacts and identify evidence gaps.",
-    student_output: "An annotated systems map and evidence checklist.",
-  },
-  steps: [
-    {
-      order: 1,
-      title: "Explore",
-      description: "Identify campus food sources.",
-    },
-    {
-      order: 2,
-      title: "Investigate",
-      description: "Map resource flows and waste.",
-    },
-    {
-      order: 3,
-      title: "Reflect",
-      description: "Explain the key sustainability impacts.",
-    },
-  ],
-});
-
-const allMilestones = await db.select().from(milestones);
-```
-
-## Generating and choosing a learning pathway
-
-Select the server-side provider with `LLM_PROVIDER=gemini` or
-`LLM_PROVIDER=deepseek` in your untracked `.env` file. If omitted, Gemini remains
-the default. Unknown values produce an error; providers are never switched
-automatically after a failure.
-
-For Gemini, set `GEMINI_API_KEY` and `GEMINI_MODEL`.
-Choose a Gemini model supporting JSON-schema structured output (for example,
-`gemini-3.8-flash`, subject to availability in your account). The key is used
-only on the server; never prefix it with `NEXT_PUBLIC_`.
-
-Generation uses the official `@google/genai` SDK through
-`GoogleGenAI.models.generateContent()`, with a 60-second timeout and JSON-schema
-structured output. Responses are validated with Zod before becoming drafts.
-
-For DeepSeek, create an API key in the [DeepSeek platform](https://platform.deepseek.com/api_keys)
-and configure:
-
-```dotenv
-LLM_PROVIDER=deepseek
-DEEPSEEK_API_KEY=your-key-here
-DEEPSEEK_MODEL=deepseek-flash
-```
-
-The `deepseek-flash` model is used when `DEEPSEEK_MODEL` is omitted.
-Requests use server-side `fetch` to
-`https://api.deepseek.com/chat/completions`, with a 60-second timeout
-and a 32768 output-token limit. No additional SDK is required.
-Requests enable JSON output (`response_format: { type: "json_object" }`)
-and disable thinking mode to focus the token budget on the requested pathways.
-You may set `DEEPSEEK_MODEL=deepseek-v4-pro` instead. Choose a model supporting
-these request options and the output budget.
-
-DeepSeek JSON output ensures JSON syntax, not the complete pathway schema.
-Both providers must pass the same Zod validation;
-truncated responses, invalid JSON, and invalid pathway structures are rejected,
-not repaired or saved. API keys stay on the server; never use `NEXT_PUBLIC_`
-for any provider credential. Restart the development server after changing the
-provider configuration.
-
-See [DeepSeek's API reference](https://api-docs.deepseek.com/api/create-chat-completion/).
-This replaces the LLM7 integration; set `LLM_PROVIDER=deepseek` instead of
-`llm7` and configure a new DeepSeek key. Old LLM7 environment variables are
-not used or automatically migrated.
-
-Run `npm run dev` and open the home page:
-
-1. Choose a domain from the fixed list (Entrepreneurship & Innovation,
-   Business & Leadership, Technology & AI, or Sustainability; defined as
-   `LEARNING_DOMAINS` in `src/shared/milestones.ts`), then enter a topic title
-   and description. Generation is rejected without a valid domain.
-2. Select **Generate three pathway options**. The domain and topic are sent to the
-   configured AI provider using the general, domain-aware teaching prompt in
-   `src/server/services/constant.ts`. The chosen domain is shown above the draft.
-   The output contains `topic`, `duration: "3 months"`, and exactly three
-   `pathway_options`. Each alternative has an ID, title, focus, description,
-   and 3-5 sequential milestones. The alternatives are independent journeys,
-   not phases of one curriculum.
-3. Compare the three option cards and choose one with its radio control.
-   No option is chosen by default. The chosen pathway's milestones appear below.
-   Each milestone contains 2-3 learning outcomes, 3-5 ordered
-   learning steps, 1-2 suggested readings (article or book name and author or
-   publisher, without links), and exactly one scenario assignment at the end.
-   Milestones and steps each have their own title and description.
-   They are read-only until you select **Edit milestone**, which also unlocks
-   its outcomes, steps, suggested readings, and scenario assignment; **Done editing** returns the
-   whole card to reading mode.
-4. Switch between options to review their milestones; edits to each option
-   remain preserved. There are no milestone or step checkboxes.
-5. Select **Save chosen pathway** to save all 3-5 milestones in that pathway.
-   The other options are not recorded. Saving is unavailable until an option is
-   chosen and locks the choice and content after success. Generate new options
-   or discard the draft to start again.
-
-Generating, editing, regenerating, and discarding do not write to the database.
-Drafts, edits, and the pathway choice exist only in page memory: reloading or
-leaving the page clears anything that has not been saved. Discarding removes the
-draft but keeps the current topic input.
-Generation validates exactly three options, each with 3-5 milestones,
-2-3 outcomes, 3-5 consecutively ordered
-steps, 1-2 suggested readings, and exactly one complete scenario assignment each.
-Readings are names only; responses containing extra resource fields such as URLs
-are rejected. The model is told to name only works it is confident exist, but
-AI-suggested references can still be wrong, so check them before assigning. IDs are consecutive
-starting at 1 within each option. Saving validates one complete chosen pathway
-and writes all its milestones in a single
-atomic insert, including the topic title and description on every selected row.
-The topic is captured when generation succeeds: changing the input fields later
-does not change the source topic associated with the existing draft.
-Neither the topic nor milestones are stored before explicit saving.
-
-GSAP provides scoped entrance, staggered card, and selection transitions.
-Animations clean up on unmount and respect `prefers-reduced-motion`.
-
-Input titles are limited to 200 characters and descriptions to 5000 characters.
-Generation has a 60-second timeout and a 32768 output-token budget for the larger
-three-option response. Choose a model supporting this output budget, and configure your hosting request timeout
-accordingly. Errors are shown in the UI, and unsuccessful saves preserve the draft.
-This prototype has no authentication or rate limiting; add both before making
-the generation endpoint publicly accessible.
-
-UI components live in `src/components/`, organized by atomic design:
-
-- `atoms/`: shared buttons, headings, and typography.
-- `molecules/`: labeled form fields, topic form, milestone cards, and draft review.
-  `molecules/milestone-card/` holds the card's sections (summary, outcomes,
-  steps, suggested reading, scenario assignment), each switching between
-  reading and edit mode.
-- `organisms/MilestoneForm.tsx`: UI composition and scoped GSAP animations.
-- `src/hooks/useMilestoneForm.ts`: generation, editing, pathway selection,
-  approval, and feedback workflow.
-
-Server actions live in `src/actions/`. They validate requests and call services in
-`src/server/services/`; only services call repositories in `src/server/repos/`.
-For example, saving flows from `saveMilestoneDraft` to `saveChosenPathway` and
-then `insertMilestones`. The page remains a Server Component; only
-the form organism and its dependencies are included in the interactive client UI.
-
-Run `npm run test:milestones` for generation and validation tests. These exercise
-the Gemini SDK and DeepSeek chat API with mocked network responses and do not send external requests
-or require an API key.
-Run `npm run test:components` to check the topic and draft-review rendering,
-field validation attributes, and pending/saved controls.
+| Command | Description |
+| --- | --- |
+| `npm run dev` / `build` / `start` | Develop, build, run in production |
+| `npm run db:generate` | Create a migration from schema changes |
+| `npm run db:migrate` | Apply migrations |
+| `npm run db:studio` | Browse the database |
+| `npm run test:milestones` | Generation and validation tests (mocked APIs, no keys needed) |
+| `npm run test:components` | Form and review rendering tests |

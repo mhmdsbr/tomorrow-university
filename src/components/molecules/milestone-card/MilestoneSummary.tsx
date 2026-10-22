@@ -1,4 +1,4 @@
-import { Heading, Typography } from "../../atoms";
+import { Typography } from "../../atoms";
 import FormField from "../FormField";
 import type { MilestoneSectionProps } from "./types";
 
@@ -34,13 +34,8 @@ export default function MilestoneSummary({
       />
     </div>
   ) : (
-    <div className="space-y-3 break-words">
-      <Heading as="h2" size="lg" color="inherit" weight="semibold">
-        {milestone.title}
-      </Heading>
-      <Typography size="sm" color="inherit" leading="relaxed">
-        {milestone.description}
-      </Typography>
-    </div>
+    <Typography size="sm" color="inherit" leading="relaxed">
+      <span className="wrap-break-word">{milestone.description}</span>
+    </Typography>
   );
 }

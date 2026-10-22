@@ -6,11 +6,13 @@ import { createPathwayFixture } from "../../test/pathway-fixtures";
 import DraftReview from "./DraftReview";
 import PathwayOptions from "./PathwayOptions";
 import TopicForm from "./TopicForm";
+import TopicSummary from "./TopicSummary";
 
 const handlers = {
   onSubmit: () => {},
   onEdit: () => {},
   onToggleEdit: () => {},
+  onToggleExpand: () => {},
 };
 const draft = createPathwayFixture(5);
 
@@ -33,13 +35,14 @@ test("three alternatives have exactly three mutually exclusive radio controls", 
   assert.match(html, /independent alternatives/);
 });
 
-test("chosen pathway renders all sequential milestones without internal selection controls", () => {
+test("chosen pathway lists all milestones as an accordion with one open", () => {
   const html = renderToStaticMarkup(
     <DraftReview
       pathway={draft.pathway_options[1]}
       saved={false}
       editing={[]}
       pending={false}
+      expanded={0}
       {...handlers}
     />,
   );
@@ -49,10 +52,28 @@ test("chosen pathway renders all sequential milestones without internal selectio
   assert.match(html, /Pathway 2 milestone 5/);
   assert.doesNotMatch(html, /Pathway 1 milestone/);
   assert.match(html, /Save chosen pathway \(5 milestones\)/);
-  assert.equal((html.match(/Scenario assignment/g) ?? []).length, 5);
-  assert.equal((html.match(/Suggested reading/g) ?? []).length, 5);
+  assert.match(html, /data-save-bar[^>]*sticky bottom-4/);
+  assert.equal((html.match(/aria-expanded="true"/g) ?? []).length, 1);
+  assert.equal((html.match(/aria-expanded="false"/g) ?? []).length, 4);
+  assert.match(html, /aria-controls="milestone-0-details"/);
+  assert.match(html, /id="milestone-0-details"/);
+  assert.doesNotMatch(html, /id="milestone-1-details"/);
+  assert.equal((html.match(/Scenario assignment/g) ?? []).length, 1);
+  assert.equal((html.match(/Suggested reading/g) ?? []).length, 1);
   assert.match(html, /<cite[^>]*>Reading 2\.1<\/cite>/);
+  assert.match(html, /3 steps · 2 outcomes · \d readings · 1 assignment/);
   assert.doesNotMatch(html, /href=/);
+  const collapsed = renderToStaticMarkup(
+    <DraftReview
+      pathway={draft.pathway_options[1]}
+      saved={false}
+      editing={[]}
+      pending={false}
+      expanded={null}
+      {...handlers}
+    />,
+  );
+  assert.doesNotMatch(collapsed, /aria-expanded="true"|Scenario assignment/);
 });
 
 test("edit unlocks outcomes, steps and scenario, while saved pathway cannot be resubmitted", () => {
@@ -62,6 +83,7 @@ test("edit unlocks outcomes, steps and scenario, while saved pathway cannot be r
       saved={false}
       editing={[4]}
       pending={false}
+      expanded={0}
       {...handlers}
     />,
   );
@@ -70,17 +92,30 @@ test("edit unlocks outcomes, steps and scenario, while saved pathway cannot be r
   assert.match(editing, /milestone-4-assignment-student_output/);
   assert.match(editing, /milestone-4-resource-0-author_or_publisher/);
   assert.match(editing, /Done editing milestone 5/);
+  assert.match(
+    editing,
+    /aria-expanded="true" aria-controls="milestone-4-details" disabled=""/,
+  );
+  assert.match(editing, /id="milestone-0-details"/);
   const saved = renderToStaticMarkup(
     <DraftReview
       pathway={draft.pathway_options[0]}
       saved
       editing={[]}
       pending={false}
+      expanded={0}
       {...handlers}
     />,
   );
-  assert.match(saved, /<fieldset disabled=""/);
-  assert.doesNotMatch(saved, /Save chosen pathway|Edit milestone/);
+  assert.doesNotMatch(
+    saved,
+    /Save chosen pathway|Edit milestone|<input|<textarea/,
+  );
+  assert.match(saved, /Scenario assignment/);
+  assert.doesNotMatch(
+    saved,
+    /<fieldset disabled=""|aria-controls="[^"]*" disabled=""/,
+  );
 });
 
 test("topic form retains native validation and displays new option generation action", () => {
@@ -103,6 +138,19 @@ test("topic form retains native validation and displays new option generation ac
       new RegExp(`<option value="${domain.replace("&", "&amp;")}">`),
     );
   assert.equal((html.match(/<option /g) ?? []).length, 5);
+  assert.match(html, /<textarea[^>]*rows="2"[^>]*field-sizing-content/);
+  assert.doesNotMatch(html, />Cancel</);
+  assert.match(
+    renderToStaticMarkup(
+      <TopicForm
+        pending={false}
+        hasDraft
+        onSubmit={handlers.onSubmit}
+        onCancel={() => {}}
+      />,
+    ),
+    />Cancel</,
+  );
   const pending = renderToStaticMarkup(
     <TopicForm pending hasDraft onSubmit={handlers.onSubmit} />,
   );
@@ -124,9 +172,31 @@ test("save button shows a spinner only while saving", () => {
         editing={[]}
         pending
         saving={saving}
+        expanded={null}
         {...handlers}
       />,
     );
   assert.match(render(true), /animate-spin[^>]*><\/span>Saving\.\.\./);
   assert.doesNotMatch(render(false), /animate-spin|Saving\.\.\./);
+});
+
+test("topic summary collapses the input to one compact block", () => {
+  const html = renderToStaticMarkup(
+    <TopicSummary
+      topic={{
+        domain: "Business & Leadership",
+        title: "Hybrid change",
+        description: "Lead it.",
+      }}
+      duration="3 months"
+      pending={false}
+      onEditTopic={() => {}}
+      onDiscard={() => {}}
+    />,
+  );
+  assert.match(html, /Business &amp; Leadership · 3 months/);
+  assert.match(html, /Hybrid change/);
+  assert.match(html, /Edit topic \/ regenerate/);
+  assert.match(html, /Discard draft/);
+  assert.doesNotMatch(html, /<input|<textarea|<select/);
 });
